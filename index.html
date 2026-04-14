@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日文單字練習助手</title>
+    <title>日文單字練習卡</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
     <style>
         :root {
             --primary-color: #4a90e2;
-            --success-color: #27ae60;
             --secondary-color: #f5f7fa;
             --text-color: #333;
-            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         body {
@@ -19,35 +20,24 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
-            color: var(--text-color);
+            overflow: hidden;
         }
 
         .container {
             text-align: center;
             width: 90%;
             max-width: 450px;
-            padding: 20px;
-        }
-
-        /* 頂部進度資訊 */
-        .stats {
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
         }
 
         /* 翻卡效果 */
         .flashcard-container {
             perspective: 1000px;
             width: 100%;
-            height: 300px;
+            height: 320px;
             cursor: pointer;
             margin-bottom: 25px;
-            position: relative;
         }
 
         .flashcard {
@@ -58,7 +48,9 @@
             transform-style: preserve-3d;
         }
 
-        .flashcard.is-flipped { transform: rotateY(180deg); }
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
 
         .card-face {
             position: absolute;
@@ -70,85 +62,79 @@
             justify-content: center;
             align-items: center;
             background: white;
-            border-radius: 20px;
+            border-radius: 24px;
             box-shadow: var(--card-shadow);
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
         }
 
-        .card-back { transform: rotateY(180deg); background-color: #fffdf5; }
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #fffef9;
+        }
 
-        /* 熟練度標籤 */
-        .mastery-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            padding: 5px 10px;
+        /* 文字樣式 */
+        .kana-text { font-size: 1.2rem; color: #888; margin-bottom: 5px; }
+        .kanji-text { font-size: 3rem; font-weight: bold; color: var(--text-color); }
+        .zh-text { font-size: 1.8rem; color: var(--primary-color); font-weight: bold; margin-bottom: 15px; }
+        .example-box { 
+            font-size: 1rem; 
+            color: #555; 
+            background: #f0f4f8; 
+            padding: 12px; 
             border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            display: none;
-        }
-        .is-mastered .mastery-badge {
-            display: block;
-            background: var(--success-color);
-            color: white;
+            width: 100%;
         }
 
-        .jp-text { font-size: 3rem; font-weight: bold; margin-bottom: 10px; }
-        .zh-text { font-size: 1.5rem; color: var(--primary-color); margin-bottom: 15px; }
-        .example-text { font-size: 0.9rem; color: #666; line-height: 1.5; padding: 0 10px; }
-
-        /* 按鈕區 */
-        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
-        button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            background: var(--primary-color);
-            color: white;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        button:active { transform: scale(0.95); }
-        button.secondary { background: #6c757d; }
-        button.mastery-toggle { background: #f39c12; }
-        button.mastery-toggle.active { background: var(--success-color); }
-
-        /* 管理功能區 (匯入/匯出) */
-        .admin-zone {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px dashed #ccc;
+        /* 按鈕樣式 */
+        .controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
         }
-        .admin-btn { background: #eee; color: #555; font-size: 0.8rem; }
-        #file-input { display: none; }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        button.secondary { background: #adb5bd; }
+
+        .tts-btn {
+            background: #ff9800;
+            margin-bottom: 20px;
+            padding: 10px 30px;
+            font-size: 1.1rem;
+        }
+
+        #counter { margin-top: 15px; color: #999; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="stats">
-        <span id="counter">0 / 0</span>
-        <span id="mastery-count">已掌握: 0</span>
-    </div>
-
-    <button class="secondary" style="margin-bottom:15px;" onclick="speakJP(event)">🔊 播放日文語音</button>
+    <button class="tts-btn" onclick="speakJP(event)">🔊 朗讀單字</button>
 
     <div class="flashcard-container" onclick="flipCard()">
         <div class="flashcard" id="card">
             <div class="card-face card-front">
-                <span class="mastery-badge">已掌握 ✔</span>
-                <div class="jp-text" id="front-jp">...</div>
-                <small style="color: #bbb;">點擊翻面</small>
+                <div class="kana-text" id="front-kana">...</div>
+                <div class="kanji-text" id="front-kanji">...</div>
+                <div style="margin-top: 20px; font-size: 0.8rem; color: #ccc;">點擊看答案</div>
             </div>
             <div class="card-face card-back">
                 <div class="zh-text" id="back-zh">...</div>
-                <div class="example-text" id="back-ex">...</div>
+                <div class="example-box" id="back-ex">...</div>
             </div>
         </div>
     </div>
@@ -157,139 +143,113 @@
         <button class="secondary" onclick="prevCard()">上一個</button>
         <button onclick="nextCard()">下一個</button>
         <button class="secondary" onclick="randomCard()">隨機</button>
-        <button id="mastery-btn" class="mastery-toggle" onclick="toggleMastery(event)">標記為已掌握</button>
     </div>
-
-    <div class="admin-zone">
-        <button class="admin-btn" onclick="exportJSON()">📤 匯出 JSON</button>
-        <button class="admin-btn" onclick="document.getElementById('file-input').click()">📥 匯入 JSON</button>
-        <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
-        <button class="admin-btn" onclick="resetData()" style="color: #e74c3c;">清空資料</button>
-    </div>
+    
+    <p id="counter"></p>
 </div>
 
 <script>
-    // 預設初始單字
-    const defaultData = [
-        { jp: "食べる", zh: "吃", ex: "りんごを食べます。", mastered: false },
-        { jp: "勉強", zh: "學習", ex: "日本語を勉強します。", mastered: false },
-        { jp: "楽しい", zh: "快樂的", ex: "旅行はとても楽しかったです。", mastered: false },
-        { jp: "貓", zh: "貓", ex: "庭に貓がいます。", mastered: false },
-        { jp: "美味しい", zh: "好吃的", ex: "このケーキは美味しいです。", mastered: false }
+    // 資料來源：使用你提供的 JSON 陣列
+    const vocabData = [
+      { "kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は学生です。(我是學生。)" },
+      { "kana": "あなた", "kanji": "", "chinese": "你", "example": "あなたは先生ですか。(你是老師嗎？)" },
+      { "kana": "あのひと", "kanji": "あの人", "chinese": "那個人", "example": "あの人は医者です。(那個人是醫生。)" },
+      { "kana": "あのかた", "kanji": "あの方", "chinese": "那一位(較禮貌)", "example": "あの方は先生です。(那一位是老師。)" },
+      { "kana": "しょくぎょう", "kanji": "職業", "chinese": "職業", "example": "職業は何ですか。(職業是什麼？)" },
+      { "kana": "かいしゃいん", "kanji": "会社員", "chinese": "職員、上班族", "example": "私は会社員です。(我是上班族。)" },
+      { "kana": "しゃいん", "kanji": "社員", "chinese": "~公司的職員", "example": "ユニクロの社員です。(是優衣庫的職員。)" },
+      { "kana": "てんいん", "kanji": "店員", "chinese": "店員", "example": "あの人は店員です。(那個人是店員。)" },
+      { "kana": "ぎんこういん", "kanji": "銀行員", "chinese": "銀行行員", "example": "私は銀行員じゃありません。(我不是銀行員。)" },
+      { "kana": "いしゃ", "kanji": "医者", "chinese": "醫生", "example": "あの人は医者です。(那個人是醫生。)" },
+      { "kana": "けんきゅうしゃ", "kanji": "研究者", "chinese": "研究人員", "example": "あなたは研究者ですか。(你是研究人員嗎？)" },
+      { "kana": "きょうし", "kanji": "教師", "chinese": "教師", "example": "私は教師です。(我是教師。)" },
+      { "kana": "せんせい", "kanji": "先生", "chinese": "老師", "example": "あの方は先生です。(那一位是老師。)" },
+      { "kana": "がくせい", "kanji": "学生", "chinese": "學生", "example": "私は学生です。(我是學生。)" },
+      { "kana": "エンジニア", "kanji": "", "chinese": "工程師", "example": "あの人はエンジニアです。(那個人是工程師。)" },
+      { "kana": "だいがく", "kanji": "大學", "chinese": "大學", "example": "ここは大学です。(這裡是大學。)" },
+      { "kana": "びょういん", "kanji": "病院", "chinese": "醫院", "example": "あそこは病院です。(那裡是醫院。)" },
+      { "kana": "たいいく", "kanji": "体育", "chinese": "體育", "example": "体育の先生です。(是體育老師。)" },
+      { "kana": "アメリカ", "kanji": "", "chinese": "美國", "example": "あの人はアメリカ人です。(那個人是美國人。)" },
+      { "kana": "イギリス", "kanji": "", "chinese": "英國", "example": "あの方はイギリス人です。(那一位是英國人。)" },
+      { "kana": "イタリア", "kanji": "", "chinese": "義大利", "example": "私はイタリア人じゃありません。(我不是義大利人。)" },
+      { "kana": "ドイツ", "kanji": "", "chinese": "德國", "example": "あの人はドイツ人ですか。(那個人是德國人嗎？)" },
+      { "kana": "フランス", "kanji": "", "chinese": "法國", "example": "フランスの學生です。(是法國的學生。)" },
+      { "kana": "タイ", "kanji": "", "chinese": "泰國", "example": "あの人は泰國人です。(那個人是泰國人。)" },
+      { "kana": "にほん", "kanji": "日本", "chinese": "日本", "example": "私は日本人です。(我是日本人。)" },
+      { "kana": "かんこく", "kanji": "韓国", "chinese": "韓國", "example": "あなたは韓國人ですか。(你是韓國人嗎？)" },
+      { "kana": "ちゅうごく", "kanji": "中国", "chinese": "中國", "example": "中國の大學です。(是中國的大學。)" },
+      { "kana": "～じん", "kanji": "～人", "chinese": "～人", "example": "私は台灣人です。(我是台灣人。)" },
+      { "kana": "かんさい", "kanji": "関西", "chinese": "關西地區", "example": "關西の大學です。(是關西的大學。)" },
+      { "kana": "ユニクロ", "kanji": "", "chinese": "優衣庫 (UNIQLO)", "example": "ユニクロの店員です。(是優衣庫的店員。)" },
+      { "kana": "だれ", "kanji": "誰", "chinese": "誰", "example": "あの人は誰ですか。(那個人是誰？)" },
+      { "kana": "どなた", "kanji": "", "chinese": "誰 (較禮貌)", "example": "あの方はどなたですか。(那一位是誰？)" },
+      { "kana": "なんさい", "kanji": "何歳", "chinese": "幾歲", "example": "あなたは何歳ですか。(你幾歲？)" },
+      { "kana": "おいくつ", "kanji": "", "chinese": "幾歲 (較禮貌)", "example": "先生はおいくつですか。(老師您幾歲？)" },
+      { "kana": "～さん", "kanji": "", "chinese": "～先生 / 小姐", "example": "林さんは學生です。(林小姐是學生。)" },
+      { "kana": "～くん", "kanji": "～君", "chinese": "對同輩、晚輩、下屬的稱呼 (多用於男性)", "example": "佐藤くんは學生です。(佐藤同學是學生。)" },
+      { "kana": "～ちゃん", "kanji": "", "chinese": "對親暱的人的稱呼 (多用於小孩或寵物)", "example": "さくらちゃんは５歳です。(小櫻５歲。)" },
+      { "kana": "はい", "kanji": "", "chinese": "是", "example": "はい、私は學生です。(是的，我是學生。)" },
+      { "kana": "いいえ", "kanji": "", "chinese": "不是", "example": "いいえ、學生じゃありません。(不，我不是學生。)" },
+      { "kana": "はじめまして", "kanji": "初めまして", "chinese": "初次見面", "example": "初めまして、私は林です。(初次見面，我是姓林。)" },
+      { "kana": "門すみません", "kanji": "", "chinese": "不好意思", "example": "すみません、あの方はどなたですか。(不好意思，請問那一位是誰？)" },
+      { "kana": "どうぞ", "kanji": "", "chinese": "請", "example": "どうぞよろしくお願いします。(請多指教。)" },
+      { "kana": "よろしくおねがいします", "kanji": "よろしくお願いします", "chinese": "請多指教", "example": "どうぞよろしくお願いします。(請多指教。)" },
+      { "kana": "そうです", "kanji": "", "chinese": "沒錯", "example": "はい、そうです。(是的，沒錯。)" },
+      { "kana": "ウメだいがく", "kanji": "ウメ大学", "chinese": "梅花大學", "example": "ウメ大學の學生です。(是梅花大學的學生。)" }
     ];
 
-    let vocabData = [];
     let currentIndex = 0;
     const card = document.getElementById('card');
 
-    // 1. 初始化資料 (優先從 LocalStorage 讀取)
-    function init() {
-        const savedData = localStorage.getItem('myFlashcards');
-        if (savedData) {
-            vocabData = JSON.parse(savedData);
-        } else {
-            vocabData = defaultData;
-            saveToStorage();
-        }
-        updateCard();
-    }
-
-    // 2. 儲存至本地儲存空間
-    function saveToStorage() {
-        localStorage.setItem('myFlashcards', JSON.stringify(vocabData));
-        const mastered = vocabData.filter(item => item.mastered).length;
-        document.getElementById('mastery-count').innerText = `已掌握: ${mastered}`;
-    }
-
-    // 3. 更新卡片 UI
     function updateCard() {
         card.classList.remove('is-flipped');
         
-        const data = vocabData[currentIndex];
-        
-        // 更新熟練度外觀
-        if (data.mastered) {
-            card.classList.add('is-mastered');
-            document.getElementById('mastery-btn').innerText = "取消掌握標記";
-            document.getElementById('mastery-btn').classList.add('active');
-        } else {
-            card.classList.remove('is-mastered');
-            document.getElementById('mastery-btn').innerText = "標記為已掌握";
-            document.getElementById('mastery-btn').classList.remove('active');
-        }
-
         setTimeout(() => {
-            document.getElementById('front-jp').innerText = data.jp;
-            document.getElementById('back-zh').innerText = data.zh;
-            document.getElementById('back-ex').innerText = data.ex;
+            const data = vocabData[currentIndex];
+            // 正面：如果有漢字就顯示漢字，假名顯示在上方
+            document.getElementById('front-kana').innerText = data.kanji ? data.kana : "";
+            document.getElementById('front-kanji').innerText = data.kanji ? data.kanji : data.kana;
+            
+            // 反面
+            document.getElementById('back-zh').innerText = data.chinese;
+            document.getElementById('back-ex').innerText = data.example;
+            
+            // 計數器
             document.getElementById('counter').innerText = `${currentIndex + 1} / ${vocabData.length}`;
         }, 150);
     }
 
-    // 4. 功能邏輯
-    function flipCard() { card.classList.toggle('is-flipped'); }
-    function nextCard() { currentIndex = (currentIndex + 1) % vocabData.length; updateCard(); }
-    function prevCard() { currentIndex = (currentIndex - 1 + vocabData.length) % vocabData.length; updateCard(); }
-    function randomCard() { currentIndex = Math.floor(Math.random() * vocabData.length); updateCard(); }
+    function flipCard() {
+        card.classList.toggle('is-flipped');
+    }
 
-    function toggleMastery(event) {
-        event.stopPropagation(); // 防止翻轉卡片
-        vocabData[currentIndex].mastered = !vocabData[currentIndex].mastered;
-        saveToStorage();
+    function nextCard() {
+        currentIndex = (currentIndex + 1) % vocabData.length;
+        updateCard();
+    }
+
+    function prevCard() {
+        currentIndex = (currentIndex - 1 + vocabData.length) % vocabData.length;
+        updateCard();
+    }
+
+    function randomCard() {
+        currentIndex = Math.floor(Math.random() * vocabData.length);
         updateCard();
     }
 
     function speakJP(event) {
         event.stopPropagation();
-        const utterance = new SpeechSynthesisUtterance(vocabData[currentIndex].jp);
+        const data = vocabData[currentIndex];
+        // 優先朗讀假名
+        const textToSpeak = data.kana;
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
         utterance.lang = 'ja-JP';
-        utterance.rate = 0.9;
+        utterance.rate = 0.8;
         window.speechSynthesis.speak(utterance);
     }
 
-    // 5. 匯出/匯入 JSON
-    function exportJSON() {
-        const dataStr = JSON.stringify(vocabData, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = "my_japanese_vocab.json";
-        link.click();
-    }
-
-    function importJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                if (Array.isArray(importedData)) {
-                    vocabData = importedData;
-                    currentIndex = 0;
-                    saveToStorage();
-                    updateCard();
-                    alert("匯入成功！");
-                }
-            } catch (err) {
-                alert("檔案格式錯誤，請確保是正確的 JSON 格式。");
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function resetData() {
-        if (confirm("確定要清空所有進度並恢復預設嗎？")) {
-            localStorage.removeItem('myFlashcards');
-            vocabData = [...defaultData];
-            currentIndex = 0;
-            saveToStorage();
-            updateCard();
-        }
-    }
-
-    init();
+    updateCard();
 </script>
 
 </body>
