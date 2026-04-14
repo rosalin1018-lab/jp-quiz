@@ -2,291 +2,289 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日文單字卡 Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>東京行衝刺：終極日文學習助手</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
     <style>
         :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #f5f7fa;
-            --accent-color: #ff9800;
-            --text-color: #333;
+            --primary: #4a90e2; --success: #27ae60; --warning: #f1c40f; --danger: #e74c3c;
+            --bg: #f0f2f5; --card-bg: #fff; --text: #2d3436;
         }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; color: var(--text); overflow-x: hidden; }
+        .app-container { width: 100%; max-width: 500px; padding: 15px; box-sizing: border-box; }
 
-        body {
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-            background-color: var(--secondary-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            flex-direction: column;
-        }
+        /* 導覽與搜尋 */
+        .header { display: flex; gap: 8px; margin-bottom: 10px; }
+        #search-box { flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: #dfe6e9; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .tab-btn.active { background: var(--primary); color: white; }
 
-        /* 分類選擇器 */
-        .header-controls {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        select {
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            font-size: 1rem;
-        }
-
-        .container {
-            text-align: center;
-            width: 90%;
-            max-width: 450px;
-        }
-
-        /* 翻卡效果 */
-        .flashcard-container {
-            perspective: 1000px;
-            width: 100%;
-            height: 320px;
-            cursor: pointer;
-            margin-bottom: 25px;
-        }
-
-        .flashcard {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
-
+        /* 單字卡 */
+        .flashcard-container { perspective: 1000px; height: 450px; margin-bottom: 15px; }
+        .flashcard { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-
         .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 30px;
-            box-sizing: border-box;
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--card-bg); border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 20px; box-sizing: border-box;
         }
+        .card-back { transform: rotateY(180deg); background: #fffef2; justify-content: center; }
 
-        .card-back { transform: rotateY(180deg); background-color: #fffef9; }
+        /* 手寫畫布 */
+        canvas { border: 2px dashed #ccc; border-radius: 12px; background: #fafafa; width: 100%; height: 180px; touch-action: none; margin-top: 10px; }
+        
+        /* 圖片 */
+        .card-img { max-width: 100%; max-height: 80px; border-radius: 8px; object-fit: cover; margin-bottom: 5px; }
 
-        .kana-text { font-size: 1.2rem; color: #888; }
-        .kanji-text { font-size: 3rem; font-weight: bold; margin: 10px 0; }
-        .zh-text { font-size: 1.8rem; color: var(--primary-color); font-weight: bold; margin-bottom: 15px; }
-        .example-box { font-size: 1rem; color: #555; background: #f0f4f8; padding: 12px; border-radius: 12px; width: 100%; }
+        /* 文字樣式 */
+        .q-text { font-size: 0.9rem; color: #636e72; margin-bottom: 5px; }
+        .target-text { font-size: 2.2rem; font-weight: bold; text-align: center; }
+        .ans-text { font-size: 1.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
 
-        /* 按鈕控制區 */
-        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            background: var(--primary-color);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        button.secondary { background: #adb5bd; }
-        button.add-btn { background: #4caf50; }
-        button.tts-btn { background: var(--accent-color); margin-bottom: 15px; width: 100%; }
+        /* 語音辨識與 SRS 按鈕 */
+        .speech-msg { font-size: 0.8rem; margin: 8px 0; min-height: 1.2rem; font-weight: bold; }
+        .srs-group { display: none; width: 100%; gap: 5px; margin-top: 15px; }
+        .is-flipped + .srs-group { display: flex; }
+        .srs-btn { flex: 1; padding: 10px 0; border: none; border-radius: 8px; color: white; font-size: 0.7rem; cursor: pointer; }
 
-        /* 新增單字的彈窗 (Modal) */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 20px;
-            width: 85%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .modal-content input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        /* 按鈕樣板 */
+        .btn-round { width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .mic-active { background: var(--danger) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* 管理介面樣式 */
+        .page { display: none; }
+        .page.active { display: block; }
+        .input-group { margin-bottom: 10px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div class="header-controls">
-    <select id="categoryFilter" onchange="filterCategory()">
-        <option value="all">全部單字</option>
-        <option value="身分">身分職業</option>
-        <option value="地點">地點名稱</option>
-        <option value="招呼">日常招呼</option>
-        <option value="其他">其他</option>
-    </select>
-    <button class="add-btn" onclick="openModal()">＋ 新增</button>
-</div>
-
-<div class="container">
-    <button class="tts-btn" onclick="speakJP(event)">🔊 朗讀單字</button>
-
-    <div class="flashcard-container" onclick="flipCard()">
-        <div class="flashcard" id="card">
-            <div class="card-face card-front">
-                <div class="kana-text" id="front-kana"></div>
-                <div class="kanji-text" id="front-kanji"></div>
-            </div>
-            <div class="card-face card-back">
-                <div class="zh-text" id="back-zh"></div>
-                <div class="example-box" id="back-ex"></div>
-            </div>
-        </div>
+<div class="app-container">
+    <div class="header">
+        <input type="text" id="search-box" placeholder="🔍 搜尋單字、分類或進度..." oninput="filterVocab()">
     </div>
 
-    <div class="controls">
-        <button class="secondary" onclick="prevCard()">上一個</button>
-        <button onclick="nextCard()">下一個</button>
-        <button class="secondary" onclick="randomCard()">隨機</button>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showPage('study')">📖 複習</button>
+        <button class="tab-btn" onclick="showPage('manage')">⚙️ 管理</button>
+        <button class="tab-btn" onclick="showPage('sync')">☁️ 同步</button>
     </div>
-    <p id="counter" style="color:#999; margin-top:15px;"></p>
-</div>
 
-<div class="modal" id="addModal">
-    <div class="modal-content">
-        <h3>新增日文單字</h3>
-        <input type="text" id="newKana" placeholder="假名 (如: わたし)">
-        <input type="text" id="newKanji" placeholder="漢字 (如: 私)">
-        <input type="text" id="newZh" placeholder="中文意思">
-        <input type="text" id="newEx" placeholder="例句">
-        <select id="newCat">
-            <option value="其他">選擇分類...</option>
-            <option value="身分">身分職業</option>
-            <option value="地點">地點名稱</option>
-            <option value="招呼">日常招呼</option>
-            <option value="其他">其他</option>
-        </select>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button style="flex:1" onclick="saveNewVocab()">儲存</button>
-            <button style="flex:1" class="secondary" onclick="closeModal()">取消</button>
+    <div id="page-study" class="page active">
+        <div class="flashcard-container">
+            <div class="flashcard" id="card">
+                <div class="card-face card-front">
+                    <span id="tag-badge" style="position:absolute; top:15px; left:15px; font-size:0.7rem; background:#eee; padding:2px 8px; border-radius:10px">分類</span>
+                    <img id="display-img" class="card-img" style="display:none">
+                    <div class="q-text">請寫出：</div>
+                    <div id="display-q" class="target-text">...</div>
+                    <canvas id="hw-canvas"></canvas>
+                    <div id="status-msg" class="speech-msg">點擊 🎤 練習口說或在上方手寫</div>
+                    <div style="display:flex; gap:10px; width:100%">
+                        <button onclick="clearCanvas()" style="flex:1">清除畫布</button>
+                        <button class="tab-btn active" onclick="recognizeHandwriting()" style="flex:1">判定手寫</button>
+                    </div>
+                </div>
+                <div class="card-face card-back" onclick="flipCard()">
+                    <div id="display-ans" class="ans-text">...</div>
+                    <div id="display-kana" style="color:#888; margin-bottom:10px">...</div>
+                    <div id="display-ex" style="font-size:0.9rem; background:#f0f2f5; padding:12px; border-radius:12px; width:100%">...</div>
+                    <button onclick="speakJP(event)" style="margin-top:15px; background:var(--warning); border:none; padding:10px 20px; border-radius:20px; font-weight:bold">🔊 朗讀語音</button>
+                </div>
+            </div>
+            <div id="srs-btns" class="srs-group">
+                <button class="srs-btn" style="background:var(--danger)" onclick="updateSRS(0)">忘記</button>
+                <button class="srs-btn" style="background:var(--warning)" onclick="updateSRS(1)">困難</button>
+                <button class="srs-btn" style="background:var(--primary)" onclick="updateSRS(2)">滿意</button>
+                <button class="srs-btn" style="background:var(--success)" onclick="updateSRS(3)">簡單</button>
+            </div>
         </div>
+
+        <div style="display:flex; justify-content: space-around; align-items: center; margin-top:20px">
+            <button class="btn-round" onclick="prevCard()">⏮️</button>
+            <button id="mic-btn" class="btn-round" style="background:var(--primary); color:white; width:70px; height:70px; font-size:2rem" onclick="startVoice(event)">🎤</button>
+            <button class="btn-round" onclick="nextCard()">⏭️</button>
+        </div>
+        <p id="counter" style="text-align:center; color:#999; font-size:0.8rem; margin-top:20px"></p>
+    </div>
+
+    <div id="page-manage" class="page">
+        <h3>新增單字卡</h3>
+        <div class="input-group"><input type="text" id="in-kana" placeholder="日文假名*"></div>
+        <div class="input-group"><input type="text" id="in-kanji" placeholder="漢字 (選填)"></div>
+        <div class="input-group"><input type="text" id="in-zh" placeholder="中文翻譯*"></div>
+        <div class="input-group"><input type="text" id="in-img" placeholder="圖片網址 (URL)"></div>
+        <div class="input-group"><input type="text" id="in-tag" placeholder="分類 (例如：自我介紹、美食)"></div>
+        <div class="input-group"><textarea id="in-ex" placeholder="例句"></textarea></div>
+        <button onclick="saveVocab()" style="width:100%; background:var(--success); color:white; padding:15px; border:none; border-radius:10px; font-weight:bold">儲存單字</button>
+    </div>
+
+    <div id="page-sync" class="page">
+        <h3>資料同步與備份</h3>
+        <button onclick="exportJSON()" style="width:100%; margin-bottom:10px">📤 匯出資料 (JSON)</button>
+        <input type="file" id="file-input" style="display:none" onchange="importJSON(event)">
+        <button onclick="document.getElementById('file-input').click()" style="width:100%; margin-bottom:10px">📥 匯入資料 (JSON)</button>
+        <button onclick="clearData()" style="width:100%; background:var(--danger); color:white; border:none; padding:10px; border-radius:10px; margin-top:30px">🧨 清空所有資料</button>
     </div>
 </div>
 
 <script>
-    // 1. 預設資料 (加入 category 屬性)
-    const defaultVocab = [
-      { kana: "わたし", kanji: "私", chinese: "我", example: "私は学生です。", category: "身分" },
-      { kana: "がくせい", kanji: "学生", chinese: "學生", example: "私は学生です。", category: "身分" },
-      { kana: "びょういん", kanji: "病院", chinese: "醫院", example: "あそこは病院です。", category: "地點" },
-      { kana: "はじめまして", kanji: "初めまして", chinese: "初次見面", example: "初めまして、林です。", category: "招呼" }
+    // --- 初始資料與 SRS 設定 ---
+    const SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 90];
+    let allVocab = JSON.parse(localStorage.getItem('pro_vocab_v5')) || [
+        { kana: "すみません", kanji: "", zh: "不好意思", ex: "すみません、駅はどこですか。", tag: "招呼", level: 0, nextReview: 0 },
+        { kana: "さな", kanji: "紗夏", zh: "Sana", ex: "サナはとても可愛いです。", tag: "TWICE", level: 0, nextReview: 0 }
     ];
-
-    let allVocab = [];
-    let filteredVocab = [];
+    let filteredList = [...allVocab];
     let currentIndex = 0;
 
-    // 2. 初始化：從 localStorage 讀取資料
-    function init() {
-        const saved = localStorage.getItem('myVocabData');
-        if (saved) {
-            allVocab = JSON.parse(saved);
-        } else {
-            allVocab = defaultVocab;
-            localStorage.setItem('myVocabData', JSON.stringify(allVocab));
-        }
-        filterCategory();
+    // --- Canvas & Handwriting ---
+    const canvas = document.getElementById('hw-canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let strokes = [];
+
+    function initCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.strokeStyle = '#2d3436';
+        
+        const start = (e) => {
+            drawing = true; strokes.push([[e.offsetX || e.touches[0].clientX - canvas.offsetLeft], [e.offsetY || e.touches[0].clientY - canvas.offsetTop], []]);
+        };
+        const move = (e) => {
+            if(!drawing) return;
+            const x = (e.offsetX || e.touches[0].clientX - canvas.offsetLeft);
+            const y = (e.offsetY || e.touches[0].clientY - canvas.offsetTop);
+            ctx.lineTo(x, y); ctx.stroke();
+            strokes[strokes.length-1][0].push(x); strokes[strokes.length-1][1].push(y);
+        };
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('touchstart', start);
+        canvas.addEventListener('mousemove', move); canvas.addEventListener('touchmove', move);
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
     }
 
-    // 3. 分類過濾邏輯
-    function filterCategory() {
-        const cat = document.getElementById('categoryFilter').value;
-        if (cat === 'all') {
-            filteredVocab = allVocab;
+    function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); strokes = []; }
+
+    async function recognizeHandwriting() {
+        if(strokes.length === 0) return alert("請先寫字");
+        const res = await fetch('https://www.google.com.tw/inputtools/request?ime=handwriting&app=autotext&cb=?', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({options: "enable_pre_space", requests: [{writing_guide: {writing_area_width: canvas.width, writing_area_height: canvas.height}, ink: strokes, language: "ja"}]})
+        });
+        const data = await res.json();
+        const candidates = data[1][0][1];
+        const target = filteredList[currentIndex];
+        if(candidates.some(c => c === target.kana || c === target.kanji)) {
+            document.getElementById('status-msg').innerText = "✅ 手寫正確！";
+            setTimeout(flipCard, 800);
         } else {
-            filteredVocab = allVocab.filter(item => item.category === cat);
+            document.getElementById('status-msg').innerText = `❌ 辨識為：${candidates[0]}`;
         }
-        currentIndex = 0;
-        updateCard();
     }
 
-    function updateCard() {
+    // --- 語音辨識 (STT) ---
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'ja-JP';
+    recognition.onresult = (e) => {
+        const result = e.results[0][0].transcript;
+        const target = filteredList[currentIndex];
+        const isMatch = (result === target.kana || result === target.kanji);
+        document.getElementById('status-msg').innerText = isMatch ? `✅ 發音正確：${result}` : `❌ 聽到的是：${result}`;
+        if(isMatch) setTimeout(flipCard, 800);
+    };
+    recognition.onend = () => document.getElementById('mic-btn').classList.remove('mic-active');
+
+    function startVoice(e) { e.stopPropagation(); document.getElementById('mic-btn').classList.add('mic-active'); recognition.start(); }
+
+    // --- 核心邏輯 ---
+    function renderCard() {
         const card = document.getElementById('card');
         card.classList.remove('is-flipped');
-        
-        if (filteredVocab.length === 0) {
-            document.getElementById('front-kanji').innerText = "無資料";
-            document.getElementById('front-kana').innerText = "";
-            document.getElementById('counter').innerText = "0 / 0";
+        document.getElementById('srs-btns').style.display = 'none';
+        clearCanvas();
+
+        if(filteredList.length === 0) {
+            document.getElementById('display-q').innerText = "查無資料";
             return;
         }
 
-        setTimeout(() => {
-            const data = filteredVocab[currentIndex];
-            document.getElementById('front-kana').innerText = data.kanji ? data.kana : "";
-            document.getElementById('front-kanji').innerText = data.kanji ? data.kanji : data.kana;
-            document.getElementById('back-zh').innerText = data.chinese;
-            document.getElementById('back-ex').innerText = data.example;
-            document.getElementById('counter').innerText = `${currentIndex + 1} / ${filteredVocab.length}`;
-        }, 150);
-    }
-
-    // 4. 單字管理功能
-    function openModal() { document.getElementById('addModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
-
-    function saveNewVocab() {
-        const newVocab = {
-            kana: document.getElementById('newKana').value,
-            kanji: document.getElementById('newKanji').value,
-            chinese: document.getElementById('newZh').value,
-            example: document.getElementById('newEx').value,
-            category: document.getElementById('newCat').value
-        };
-
-        if (!newVocab.kana || !newVocab.chinese) {
-            alert("請至少填寫假名與中文！");
-            return;
-        }
-
-        allVocab.push(newVocab);
-        localStorage.setItem('myVocabData', JSON.stringify(allVocab));
+        const data = filteredList[currentIndex];
+        document.getElementById('display-q').innerText = data.zh;
+        document.getElementById('display-ans').innerText = data.kanji || data.kana;
+        document.getElementById('display-kana').innerText = data.kanji ? data.kana : "";
+        document.getElementById('display-ex').innerText = data.ex || "尚無例句";
+        document.getElementById('tag-badge').innerText = data.tag || "一般";
         
-        // 清空欄位並關閉
-        document.querySelectorAll('.modal-content input').forEach(i => i.value = '');
-        closeModal();
-        filterCategory();
-        alert("儲存成功！");
+        const img = document.getElementById('display-img');
+        if(data.img) { img.src = data.img; img.style.display = 'block'; } else { img.style.display = 'none'; }
+        
+        document.getElementById('counter').innerText = `${currentIndex + 1} / ${filteredList.length} (Level: ${data.level || 0})`;
     }
 
-    // 5. 基礎控制
-    function flipCard() { document.getElementById('card').classList.toggle('is-flipped'); }
-    function nextCard() { currentIndex = (currentIndex + 1) % filteredVocab.length; updateCard(); }
-    function prevCard() { currentIndex = (currentIndex - 1 + filteredVocab.length) % filteredVocab.length; updateCard(); }
-    function randomCard() { currentIndex = Math.floor(Math.random() * filteredVocab.length); updateCard(); }
-
-    function speakJP(event) {
-        event.stopPropagation();
-        if (filteredVocab.length === 0) return;
-        const utterance = new SpeechSynthesisUtterance(filteredVocab[currentIndex].kana);
-        utterance.lang = 'ja-JP';
-        window.speechSynthesis.speak(utterance);
+    function flipCard() {
+        const card = document.getElementById('card');
+        card.classList.toggle('is-flipped');
+        document.getElementById('srs-btns').style.display = card.classList.contains('is-flipped') ? 'flex' : 'none';
     }
 
-    init();
+    function updateSRS(score) {
+        const word = filteredList[currentIndex];
+        if(score === 0) word.level = 0;
+        else word.level = Math.min((word.level || 0) + score, SRS_INTERVALS.length - 1);
+        word.nextReview = Date.now() + SRS_INTERVALS[word.level] * 24 * 60 * 60 * 1000;
+        save();
+        nextCard();
+    }
+
+    function filterVocab() {
+        const q = document.getElementById('search-box').value.toLowerCase();
+        filteredList = allVocab.filter(v => v.kana.includes(q) || v.zh.includes(q) || (v.tag && v.tag.toLowerCase().includes(q)));
+        currentIndex = 0; renderCard();
+    }
+
+    function saveVocab() {
+        const kana = document.getElementById('in-kana').value;
+        const zh = document.getElementById('in-zh').value;
+        if(!kana || !zh) return alert("必填欄位缺失");
+        allVocab.push({
+            kana, zh, kanji: document.getElementById('in-kanji').value,
+            img: document.getElementById('in-img').value, tag: document.getElementById('in-tag').value,
+            ex: document.getElementById('in-ex').value, level: 0, nextReview: 0
+        });
+        save(); alert("儲存成功！"); showPage('study');
+    }
+
+    function save() { localStorage.setItem('pro_vocab_v5', JSON.stringify(allVocab)); }
+    function showPage(p) {
+        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
+        document.getElementById('page-'+p).classList.add('active');
+        document.querySelector(`button[onclick="showPage('${p}')"]`).classList.add('active');
+        if(p === 'study') renderCard();
+    }
+
+    function nextCard() { currentIndex = (currentIndex + 1) % filteredList.length; renderCard(); }
+    function prevCard() { currentIndex = (currentIndex - 1 + filteredList.length) % filteredList.length; renderCard(); }
+    function speakJP(e) { e.stopPropagation(); const u = new SpeechSynthesisUtterance(filteredList[currentIndex].kana); u.lang='ja-JP'; window.speechSynthesis.speak(u); }
+
+    function exportJSON() {
+        const blob = new Blob([JSON.stringify(allVocab)], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "japanese_vocab.json"; a.click();
+    }
+    function importJSON(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => { allVocab = JSON.parse(event.target.result); save(); location.reload(); };
+        reader.readAsText(e.target.files[0]);
+    }
+    function clearData() { if(confirm("確定刪除？")) { localStorage.clear(); location.reload(); } }
+
+    window.onload = () => { initCanvas(); renderCard(); };
 </script>
-
 </body>
 </html>
