@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="日文單字卡">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>日文學習旗艦版 App</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="日文單字卡">
+    <meta name="theme-color" content="#f0f4f8">
+
     <style>
         :root {
             --bg: #f0f4f8;
@@ -166,7 +170,7 @@
 </nav>
 
 <script>
-    // --- 資料與邏輯 ---
+    // --- 資料管理核心 ---
     const defaultWords = [
         {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は學生です。(我是學生。)"},
         {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは學生です。(陳先生是學生。)"},
@@ -176,6 +180,7 @@
     let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || defaultWords;
     let learnedMap = JSON.parse(localStorage.getItem('jp_learned_map')) || {};
     let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
+
     let currentPool = [...allWords];
     let idx = 0;
     let filterUnlearned = false;
@@ -225,7 +230,10 @@
         if(status) setTimeout(() => moveCard(1), 400);
     }
 
-    function shuffleWords() { currentPool.sort(() => Math.random() - 0.5); idx = 0; updateCard(); }
+    function shuffleWords() {
+        currentPool.sort(() => Math.random() - 0.5);
+        idx = 0; updateCard();
+    }
 
     function toggleUnlearnedOnly() {
         filterUnlearned = !filterUnlearned;
@@ -235,7 +243,7 @@
     }
 
     function loadQuiz() {
-        if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足"; return; }
+        if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足(至少需4個)"; return; }
         document.getElementById('next-q-btn').style.display = "none";
         const isJpToZh = Math.random() > 0.5;
         const target = allWords[Math.floor(Math.random() * allWords.length)];
@@ -274,7 +282,7 @@
     function importJSON() {
         try {
             const input = document.getElementById('import-area').value.trim();
-            if(!input) return;
+            if(!input) return alert("請輸入 JSON 內容");
             const data = JSON.parse(input);
             if(Array.isArray(data)) {
                 if(confirm("取代現有清單？點擊『取消』則合併。")) allWords = data;
@@ -284,16 +292,22 @@
                 }
                 saveAll();
                 location.reload();
-            }
-        } catch(e) { alert("JSON 格式錯誤"); }
+            } else alert("格式錯誤，必須是陣列 []");
+        } catch(e) { alert("JSON 語法錯誤"); }
     }
 
     function exportJSON() {
         document.getElementById('import-area').value = JSON.stringify(allWords, null, 2);
-        alert("已導出至上方框內");
+        document.getElementById('import-area').select();
+        alert("已將資料轉為 JSON 貼在上方框內。");
     }
 
-    function clearAllData() { if(confirm("確定清空？")) { localStorage.clear(); location.reload(); } }
+    function clearAllData() {
+        if(confirm("確定要刪除所有單字與學習進度嗎？")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
 
     function renderWordList() {
         const box = document.getElementById('full-list');
@@ -320,7 +334,7 @@
         weakBox.innerHTML = "";
         Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([k, c]) => {
             const div = document.createElement('div');
-            div.style = "padding:10px; border-bottom:1px solid #eee;";
+            div.style = "padding:10px; border-bottom:1px solid #eee; font-size:14px;";
             div.innerHTML = `<b>${k}</b> <span style="color:var(--danger); float:right;">錯 ${c} 次</span>`;
             weakBox.appendChild(div);
         });
@@ -328,44 +342,49 @@
 
     function updateProgressBar() {
         const learnedCount = Object.values(learnedMap).filter(v => v).length;
-        document.getElementById('main-progress').style.width = ((learnedCount / (allWords.length || 1)) * 100) + "%";
+        const progress = (learnedCount / (allWords.length || 1)) * 100;
+        document.getElementById('main-progress').style.width = progress + "%";
     }
 
     function speak(type) {
         if(currentPool.length === 0) return;
-        const text = type === 'word' ? (currentPool[idx].kanji || currentPool[idx].kana) : currentPool[idx].example.split('(')[0];
+        const item = currentPool[idx];
+        const text = type === 'word' ? (item.kanji || item.kana) : item.example.split('(')[0];
         window.speechSynthesis.cancel();
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'ja-JP';
+        ut.rate = 0.8;
         window.speechSynthesis.speak(ut);
     }
 
     function startRecog() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(!SpeechRecognition) return;
+        if(!SpeechRecognition) return alert("不支援語音辨識");
         const rec = new SpeechRecognition();
         rec.lang = 'ja-JP';
         const bar = document.getElementById('voice-info');
         rec.onstart = () => { bar.className = "listening"; bar.innerText = "正在聆聽..."; };
         rec.onresult = (e) => {
             const res = e.results[0][0].transcript;
-            if(res === currentPool[idx].kanji || res === currentPool[idx].kana) {
-                bar.innerText = "✅ 正確！"; handleMark(true);
+            const item = currentPool[idx];
+            if(res === item.kanji || res === item.kana) {
+                bar.innerText = "✅ 正確！";
+                handleMark(true);
             } else bar.innerText = "❌ 聽到的是: " + res;
         };
         rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2000); };
         rec.start();
     }
 
-    // 初始化執行
+    // 初始化
     updateCard();
 
-    // --- Service Worker 註冊 (離線功能) ---
+    // ✅ 修正後的 Service Worker 註冊代碼 (在標籤結束前)
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('離線功能註冊成功'))
-                .catch(err => console.log('註冊失敗', err));
+                .then(reg => console.log('離線功能已啟動！', reg))
+                .catch(err => console.error('離線功能啟動失敗：', err));
         });
     }
 </script>
