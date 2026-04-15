@@ -167,10 +167,9 @@
 
 <script>
     // --- 資料管理核心 ---
-    // 預設資料
     const defaultWords = [
-        {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は学生です。(我是學生。)"},
-        {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは学生です。(陳先生是學生。)"},
+        {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は學生です。(我是學生。)"},
+        {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは學生です。(陳先生是學生。)"},
         {"kana": "にほん", "kanji": "日本", "chinese": "日本", "example": "日本へ行きます。(去日本。)"}
     ];
 
@@ -182,20 +181,17 @@
     let idx = 0;
     let filterUnlearned = false;
 
-    // --- 介面控制 ---
     function changeTab(tabId, el) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId + '-view').classList.add('active');
         el.classList.add('active');
         document.getElementById('view-title').innerText = el.innerText + '模式';
-        
         if(tabId === 'list') renderWordList();
         if(tabId === 'stats') renderStats();
         if(tabId === 'quiz') loadQuiz();
     }
 
-    // --- 學習模式邏輯 ---
     function updateCard() {
         const display = document.getElementById('ruby-display');
         if(currentPool.length === 0) {
@@ -242,17 +238,13 @@
         idx = 0; updateCard();
     }
 
-    // --- 測驗模式邏輯 ---
-    let correctAns = "";
     function loadQuiz() {
         if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足(至少需4個)"; return; }
         document.getElementById('next-q-btn').style.display = "none";
         const isJpToZh = Math.random() > 0.5;
         const target = allWords[Math.floor(Math.random() * allWords.length)];
-        
         document.getElementById('quiz-text').innerText = isJpToZh ? (target.kanji || target.kana) : target.chinese;
-        correctAns = isJpToZh ? target.chinese : (target.kanji || target.kana);
-
+        let correctAns = isJpToZh ? target.chinese : (target.kanji || target.kana);
         let options = [correctAns];
         while(options.length < 4) {
             let rand = allWords[Math.floor(Math.random() * allWords.length)];
@@ -260,7 +252,6 @@
             if(!options.includes(val)) options.push(val);
         }
         options.sort(() => Math.random() - 0.5);
-
         const optDiv = document.getElementById('quiz-options');
         optDiv.innerHTML = "";
         options.forEach(opt => {
@@ -277,7 +268,6 @@
         });
     }
 
-    // --- 核心儲存與匯入邏輯 ---
     function saveAll() {
         localStorage.setItem('jp_master_data', JSON.stringify(allWords));
         localStorage.setItem('jp_learned_map', JSON.stringify(learnedMap));
@@ -290,12 +280,10 @@
             const input = document.getElementById('import-area').value.trim();
             if(!input) return alert("請輸入 JSON 內容");
             const data = JSON.parse(input);
-            
             if(Array.isArray(data)) {
                 const mode = confirm("點擊『確定』：覆蓋並取代現有清單\n點擊『取消』：將新單字加入現有清單");
-                if(mode) {
-                    allWords = data;
-                } else {
+                if(mode) allWords = data;
+                else {
                     const existingKanas = allWords.map(w => w.kana);
                     const newData = data.filter(w => !existingKanas.includes(w.kana));
                     allWords = allWords.concat(newData);
@@ -307,9 +295,7 @@
                 idx = 0;
                 renderWordList();
                 updateCard();
-            } else {
-                alert("格式錯誤，必須是陣列 []");
-            }
+            } else alert("格式錯誤，必須是陣列 []");
         } catch(e) { alert("JSON 語法錯誤，請檢查符號。"); }
     }
 
@@ -346,14 +332,12 @@
 
     function toggleWordStat(k) { learnedMap[k] = !learnedMap[k]; saveAll(); renderWordList(); }
 
-    // --- 統計邏輯 ---
     function renderStats() {
         const learnedCount = Object.values(learnedMap).filter(v => v).length;
         const total = allWords.length;
-        const percent = Math.round((learnedCount / total) * 100) || 0;
+        const percent = Math.round((learnedCount / (total || 1)) * 100);
         document.getElementById('stat-percent').innerText = percent + "%";
         document.getElementById('stat-count').innerText = `${learnedCount} / ${total}`;
-        
         const weakOnes = Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 5);
         const weakBox = document.getElementById('weak-list');
         weakBox.innerHTML = weakOnes.length ? "" : "尚無錯題紀錄";
@@ -378,7 +362,7 @@
         window.speechSynthesis.cancel();
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'ja-JP';
-        ut.rate = type === 'word' ? 0.8 : 0.9;
+        ut.rate = 0.8;
         window.speechSynthesis.speak(ut);
     }
 
@@ -395,22 +379,23 @@
             if(res === item.kanji || res === item.kana) {
                 bar.innerText = "✅ 正確！(" + res + ")";
                 handleMark(true);
-            } else { bar.innerText = "❌ 聽到的是: " + res; }
+            } else bar.innerText = "❌ 聽到的是: " + res;
         };
         rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2000); };
         rec.start();
     }
 
-    // 初始化顯示
+    // 初始化
     updateCard();
+
+    // 註冊 Service Worker (離線功能)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('離線功能已啟動！', reg))
+                .catch(err => console.error('離線功能啟動失敗：', err));
+        });
+    }
 </script>
-    // 在 script 標籤的最後面加入
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('離線功能已啟動！', reg))
-            .catch(err => console.log('離線功能啟動失敗：', err));
-    });
-}
 </body>
 </html>
