@@ -1,256 +1,408 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日文單字練習卡</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="日文單字卡">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>日文學習旗艦版 App</title>
     <style>
         :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #f5f7fa;
-            --text-color: #333;
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --bg: #f0f4f8;
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --card-white: #ffffff;
+            --text-main: #2c3e50;
         }
 
         body {
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-            background-color: var(--secondary-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            margin: 0; padding: 0;
+            font-family: 'Helvetica Neue', Arial, 'PingFang TC', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
         }
 
-        .container {
-            text-align: center;
-            width: 90%;
-            max-width: 450px;
+        header {
+            padding: 12px; background: white; text-align: center;
+            font-weight: bold; box-shadow: 0 1px 5px rgba(0,0,0,0.05);
         }
 
-        /* 翻卡效果 */
-        .flashcard-container {
-            perspective: 1000px;
-            width: 100%;
-            height: 320px;
-            cursor: pointer;
-            margin-bottom: 25px;
-        }
+        .progress-container { height: 6px; background: #e0e0e0; width: 100%; }
+        .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.4s; }
 
-        .flashcard {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
+        main { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .view-section { display: none; width: 100%; max-width: 480px; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: flex; flex-direction: column; }
 
-        .flashcard.is-flipped {
-            transform: rotateY(180deg);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: white;
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-            padding: 30px;
-            box-sizing: border-box;
-        }
+        .card-box { perspective: 1000px; width: 100%; height: 320px; margin-bottom: 20px; }
+        .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .card-inner.flipped { transform: rotateY(180deg); }
+        .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: var(--card-white); border-radius: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 30px; box-sizing: border-box; }
+        .face-back { transform: rotateY(180deg); border: 2px solid var(--primary); }
 
-        .card-back {
-            transform: rotateY(180deg);
-            background-color: #fffef9;
-        }
+        ruby { font-size: 52px; font-weight: bold; }
+        rt { font-size: 18px; color: #888; letter-spacing: 2px; }
 
-        /* 文字樣式 */
-        .kana-text { font-size: 1.2rem; color: #888; margin-bottom: 5px; }
-        .kanji-text { font-size: 3rem; font-weight: bold; color: var(--text-color); }
-        .zh-text { font-size: 1.8rem; color: var(--primary-color); font-weight: bold; margin-bottom: 15px; }
-        .example-box { 
-            font-size: 1rem; 
-            color: #555; 
-            background: #f0f4f8; 
-            padding: 12px; 
-            border-radius: 12px;
-            width: 100%;
-        }
+        .example-box { background: #f8f9fa; padding: 15px; border-radius: 15px; width: 100%; border-left: 4px solid var(--primary); margin-top: 15px; }
 
-        /* 按鈕樣式 */
-        .controls {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
+        .quiz-q { font-size: 28px; font-weight: bold; color: var(--primary); margin-bottom: 25px; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .option-btn { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 15px; margin-bottom: 10px; cursor: pointer; text-align: left; transition: 0.2s; font-size: 16px; width: 100%; }
+        .option-btn.correct { background: #d4edda; border-color: var(--success); color: #155724; }
+        .option-btn.wrong { background: #f8d7da; border-color: var(--danger); color: #721c24; }
 
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            background: var(--primary-color);
-            color: white;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
+        .search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; }
+        .word-list { width: 100%; background: white; border-radius: 15px; overflow: hidden; }
+        .word-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; }
 
-        button:hover { opacity: 0.9; transform: translateY(-2px); }
-        button:active { transform: translateY(0); }
-        button.secondary { background: #adb5bd; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 15px; }
+        button { border: none; padding: 14px; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-green { background: var(--success); color: white; }
+        .btn-red { background: var(--danger); color: white; }
+        .btn-gray { background: #e0e0e0; color: #666; }
+        button:active { transform: scale(0.96); }
 
-        .tts-btn {
-            background: #ff9800;
-            margin-bottom: 20px;
-            padding: 10px 30px;
-            font-size: 1.1rem;
-        }
+        nav { height: 65px; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
+        .tab { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 12px; color: #999; cursor: pointer; font-weight: bold; }
+        .tab.active { color: var(--primary); }
+        .tab i { font-size: 20px; margin-bottom: 3px; }
 
-        #counter { margin-top: 15px; color: #999; font-size: 0.9rem; }
+        #voice-info { padding: 8px; border-radius: 10px; font-size: 13px; margin-bottom: 10px; text-align: center; width: 100%; display: none; }
+        .listening { background: #ffeaa7; color: #d63031; display: block !important; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <button class="tts-btn" onclick="speakJP(event)">🔊 朗讀單字</button>
+<header id="view-title">學習模式</header>
+<div class="progress-container"><div class="progress-fill" id="main-progress"></div></div>
 
-    <div class="flashcard-container" onclick="flipCard()">
-        <div class="flashcard" id="card">
-            <div class="card-face card-front">
-                <div class="kana-text" id="front-kana">...</div>
-                <div class="kanji-text" id="front-kanji">...</div>
-                <div style="margin-top: 20px; font-size: 0.8rem; color: #ccc;">點擊看答案</div>
-            </div>
-            <div class="card-face card-back">
-                <div class="zh-text" id="back-zh">...</div>
-                <div class="example-box" id="back-ex">...</div>
+<main>
+    <section id="study-view" class="view-section active">
+        <div id="voice-info">正在聆聽中...</div>
+        <div class="card-box">
+            <div class="card-inner" id="flashcard" onclick="this.classList.toggle('flipped')">
+                <div class="face">
+                    <div id="learned-status" style="position:absolute; top:20px; right:25px; font-size:24px;"></div>
+                    <div id="ruby-display"></div>
+                </div>
+                <div class="face face-back">
+                    <div id="zh-display" style="font-size:32px; color:var(--primary); font-weight:bold; margin-bottom:15px;"></div>
+                    <div class="example-box">
+                        <div id="ex-jp-display" style="font-weight:bold; margin-bottom:5px;"></div>
+                        <div id="ex-zh-display" style="color:#888; font-size:14px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="grid-2">
+            <button class="btn-gray" onclick="shuffleWords()">🔀 隨機抽卡</button>
+            <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn">練習未會</button>
+        </div>
+        <div class="grid-2">
+            <button class="btn-blue" onclick="speak('word')">🔊 讀單字</button>
+            <button class="btn-blue" onclick="speak('ex')">💬 聽例句</button>
+            <button class="btn-gray" style="grid-column: span 2; background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
+        </div>
+        <div class="grid-2">
+            <button class="btn-red" onclick="handleMark(false)">❌ 還不熟</button>
+            <button class="btn-green" onclick="handleMark(true)">✅ 會了</button>
+        </div>
+        <div style="display:flex; gap:10px; width:100%;">
+            <button class="btn-gray" style="flex:1" onclick="moveCard(-1)">上一個</button>
+            <button class="btn-gray" style="flex:1" onclick="moveCard(1)">下一個</button>
+        </div>
+        <div id="card-counter" style="margin-top:15px; color:#999; font-size:14px;"></div>
+    </section>
 
-    <div class="controls">
-        <button class="secondary" onclick="prevCard()">上一個</button>
-        <button onclick="nextCard()">下一個</button>
-        <button class="secondary" onclick="randomCard()">隨機</button>
-    </div>
-    
-    <p id="counter"></p>
-</div>
+    <section id="quiz-view" class="view-section">
+        <div style="background:white; padding:20px; border-radius:20px; width:100%; box-sizing:border-box;">
+            <div id="quiz-text" class="quiz-q"></div>
+            <div id="quiz-options"></div>
+            <button id="next-q-btn" class="btn-blue" style="width:100%; margin-top:15px; display:none;" onclick="loadQuiz()">下一題</button>
+        </div>
+    </section>
+
+    <section id="list-view" class="view-section">
+        <div style="background:white; padding:15px; border-radius:15px; margin-bottom:20px;">
+            <h3 style="margin-top:0">資料管理</h3>
+            <textarea id="import-area" style="width:100%; height:80px; border:1px solid #ddd; border-radius:10px; padding:8px;" placeholder='貼上 JSON 格式單字...'></textarea>
+            <div class="grid-2" style="margin-top:8px; margin-bottom:0;">
+                <button class="btn-green" onclick="importJSON()">💾 儲存匯入</button>
+                <button class="btn-blue" onclick="exportJSON()">📤 導出備份</button>
+            </div>
+            <button class="btn-red" style="width:100%; margin-top:8px; padding:8px; font-size:12px; opacity:0.8;" onclick="clearAllData()">🗑️ 清空所有單字與進度</button>
+        </div>
+        <input type="text" class="search-input" id="search-box" placeholder="搜尋單字、中文或假名..." oninput="renderWordList()">
+        <div class="word-list" id="full-list"></div>
+    </section>
+
+    <section id="stats-view" class="view-section">
+        <div style="background:white; padding:25px; border-radius:20px; text-align:center; width:100%; box-sizing:border-box;">
+            <h1 id="stat-percent" style="font-size:48px; margin:10px 0; color:var(--success);">0%</h1>
+            <p style="color:#666;">掌握進度總覽</p>
+            <div id="stat-count" style="font-weight:bold;">0 / 0</div>
+        </div>
+        <div style="background:white; padding:20px; border-radius:20px; margin-top:20px; width:100%; box-sizing:border-box;">
+            <h3 style="margin-top:0; color:var(--danger);">⚠️ 大魔王 (錯最多次)</h3>
+            <div id="weak-list"></div>
+        </div>
+    </section>
+</main>
+
+<nav>
+    <div class="tab active" onclick="changeTab('study', this)"><i>📚</i>學習</div>
+    <div class="tab" onclick="changeTab('quiz', this)"><i>📝</i>測驗</div>
+    <div class="tab" onclick="changeTab('list', this)"><i>🔍</i>列表</div>
+    <div class="tab" onclick="changeTab('stats', this)"><i>📊</i>統計</div>
+</nav>
 
 <script>
-    // 資料來源：使用你提供的 JSON 陣列
-    const vocabData = [
-      { "kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は学生です。(我是學生。)" },
-      { "kana": "あなた", "kanji": "", "chinese": "你", "example": "あなたは先生ですか。(你是老師嗎？)" },
-      { "kana": "あのひと", "kanji": "あの人", "chinese": "那個人", "example": "あの人は医者です。(那個人是醫生。)" },
-      { "kana": "あのかた", "kanji": "あの方", "chinese": "那一位(較禮貌)", "example": "あの方は先生です。(那一位是老師。)" },
-      { "kana": "しょくぎょう", "kanji": "職業", "chinese": "職業", "example": "職業は何ですか。(職業是什麼？)" },
-      { "kana": "かいしゃいん", "kanji": "会社員", "chinese": "職員、上班族", "example": "私は会社員です。(我是上班族。)" },
-      { "kana": "しゃいん", "kanji": "社員", "chinese": "~公司的職員", "example": "ユニクロの社員です。(是優衣庫的職員。)" },
-      { "kana": "てんいん", "kanji": "店員", "chinese": "店員", "example": "あの人は店員です。(那個人是店員。)" },
-      { "kana": "ぎんこういん", "kanji": "銀行員", "chinese": "銀行行員", "example": "私は銀行員じゃありません。(我不是銀行員。)" },
-      { "kana": "いしゃ", "kanji": "医者", "chinese": "醫生", "example": "あの人は医者です。(那個人是醫生。)" },
-      { "kana": "けんきゅうしゃ", "kanji": "研究者", "chinese": "研究人員", "example": "あなたは研究者ですか。(你是研究人員嗎？)" },
-      { "kana": "きょうし", "kanji": "教師", "chinese": "教師", "example": "私は教師です。(我是教師。)" },
-      { "kana": "せんせい", "kanji": "先生", "chinese": "老師", "example": "あの方は先生です。(那一位是老師。)" },
-      { "kana": "がくせい", "kanji": "学生", "chinese": "學生", "example": "私は学生です。(我是學生。)" },
-      { "kana": "エンジニア", "kanji": "", "chinese": "工程師", "example": "あの人はエンジニアです。(那個人是工程師。)" },
-      { "kana": "だいがく", "kanji": "大學", "chinese": "大學", "example": "ここは大学です。(這裡是大學。)" },
-      { "kana": "びょういん", "kanji": "病院", "chinese": "醫院", "example": "あそこは病院です。(那裡是醫院。)" },
-      { "kana": "たいいく", "kanji": "体育", "chinese": "體育", "example": "体育の先生です。(是體育老師。)" },
-      { "kana": "アメリカ", "kanji": "", "chinese": "美國", "example": "あの人はアメリカ人です。(那個人是美國人。)" },
-      { "kana": "イギリス", "kanji": "", "chinese": "英國", "example": "あの方はイギリス人です。(那一位是英國人。)" },
-      { "kana": "イタリア", "kanji": "", "chinese": "義大利", "example": "私はイタリア人じゃありません。(我不是義大利人。)" },
-      { "kana": "ドイツ", "kanji": "", "chinese": "德國", "example": "あの人はドイツ人ですか。(那個人是德國人嗎？)" },
-      { "kana": "フランス", "kanji": "", "chinese": "法國", "example": "フランスの學生です。(是法國的學生。)" },
-      { "kana": "タイ", "kanji": "", "chinese": "泰國", "example": "あの人は泰國人です。(那個人是泰國人。)" },
-      { "kana": "にほん", "kanji": "日本", "chinese": "日本", "example": "私は日本人です。(我是日本人。)" },
-      { "kana": "かんこく", "kanji": "韓国", "chinese": "韓國", "example": "あなたは韓國人ですか。(你是韓國人嗎？)" },
-      { "kana": "ちゅうごく", "kanji": "中国", "chinese": "中國", "example": "中國の大學です。(是中國的大學。)" },
-      { "kana": "～じん", "kanji": "～人", "chinese": "～人", "example": "私は台灣人です。(我是台灣人。)" },
-      { "kana": "かんさい", "kanji": "関西", "chinese": "關西地區", "example": "關西の大學です。(是關西的大學。)" },
-      { "kana": "ユニクロ", "kanji": "", "chinese": "優衣庫 (UNIQLO)", "example": "ユニクロの店員です。(是優衣庫的店員。)" },
-      { "kana": "だれ", "kanji": "誰", "chinese": "誰", "example": "あの人は誰ですか。(那個人是誰？)" },
-      { "kana": "どなた", "kanji": "", "chinese": "誰 (較禮貌)", "example": "あの方はどなたですか。(那一位是誰？)" },
-      { "kana": "なんさい", "kanji": "何歳", "chinese": "幾歲", "example": "あなたは何歳ですか。(你幾歲？)" },
-      { "kana": "おいくつ", "kanji": "", "chinese": "幾歲 (較禮貌)", "example": "先生はおいくつですか。(老師您幾歲？)" },
-      { "kana": "～さん", "kanji": "", "chinese": "～先生 / 小姐", "example": "林さんは學生です。(林小姐是學生。)" },
-      { "kana": "～くん", "kanji": "～君", "chinese": "對同輩、晚輩、下屬的稱呼 (多用於男性)", "example": "佐藤くんは學生です。(佐藤同學是學生。)" },
-      { "kana": "～ちゃん", "kanji": "", "chinese": "對親暱的人的稱呼 (多用於小孩或寵物)", "example": "さくらちゃんは５歳です。(小櫻５歲。)" },
-      { "kana": "はい", "kanji": "", "chinese": "是", "example": "はい、私は學生です。(是的，我是學生。)" },
-      { "kana": "いいえ", "kanji": "", "chinese": "不是", "example": "いいえ、學生じゃありません。(不，我不是學生。)" },
-      { "kana": "はじめまして", "kanji": "初めまして", "chinese": "初次見面", "example": "初めまして、私は林です。(初次見面，我是姓林。)" },
-      { "kana": "門すみません", "kanji": "", "chinese": "不好意思", "example": "すみません、あの方はどなたですか。(不好意思，請問那一位是誰？)" },
-      { "kana": "どうぞ", "kanji": "", "chinese": "請", "example": "どうぞよろしくお願いします。(請多指教。)" },
-      { "kana": "よろしくおねがいします", "kanji": "よろしくお願いします", "chinese": "請多指教", "example": "どうぞよろしくお願いします。(請多指教。)" },
-      { "kana": "そうです", "kanji": "", "chinese": "沒錯", "example": "はい、そうです。(是的，沒錯。)" },
-      { "kana": "ウメだいがく", "kanji": "ウメ大学", "chinese": "梅花大學", "example": "ウメ大學の學生です。(是梅花大學的學生。)" }
+    // --- 資料管理核心 ---
+    // 預設資料
+    const defaultWords = [
+        {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は学生です。(我是學生。)"},
+        {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは学生です。(陳先生是學生。)"},
+        {"kana": "にほん", "kanji": "日本", "chinese": "日本", "example": "日本へ行きます。(去日本。)"}
     ];
 
-    let currentIndex = 0;
-    const card = document.getElementById('card');
+    let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || defaultWords;
+    let learnedMap = JSON.parse(localStorage.getItem('jp_learned_map')) || {};
+    let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
 
-    function updateCard() {
-        card.classList.remove('is-flipped');
+    let currentPool = [...allWords];
+    let idx = 0;
+    let filterUnlearned = false;
+
+    // --- 介面控制 ---
+    function changeTab(tabId, el) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId + '-view').classList.add('active');
+        el.classList.add('active');
+        document.getElementById('view-title').innerText = el.innerText + '模式';
         
-        setTimeout(() => {
-            const data = vocabData[currentIndex];
-            // 正面：如果有漢字就顯示漢字，假名顯示在上方
-            document.getElementById('front-kana').innerText = data.kanji ? data.kana : "";
-            document.getElementById('front-kanji').innerText = data.kanji ? data.kanji : data.kana;
+        if(tabId === 'list') renderWordList();
+        if(tabId === 'stats') renderStats();
+        if(tabId === 'quiz') loadQuiz();
+    }
+
+    // --- 學習模式邏輯 ---
+    function updateCard() {
+        const display = document.getElementById('ruby-display');
+        if(currentPool.length === 0) {
+            display.innerHTML = "<div style='font-size:24px; color:#ccc;'>暫無單字<br>請切換模式或匯入資料</div>";
+            return;
+        }
+        const item = currentPool[idx];
+        display.innerHTML = item.kanji ? `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>` : item.kana;
+        document.getElementById('zh-display').innerText = item.chinese;
+        const parts = item.example.split('(');
+        document.getElementById('ex-jp-display').innerText = parts[0].trim();
+        document.getElementById('ex-zh-display').innerText = parts[1] ? parts[1].replace(')', '') : '';
+        document.getElementById('learned-status').innerText = learnedMap[item.kana] ? '✅' : '';
+        document.getElementById('flashcard').classList.remove('flipped');
+        document.getElementById('card-counter').innerText = `${idx + 1} / ${currentPool.length}`;
+        updateProgressBar();
+    }
+
+    function moveCard(d) { 
+        if(currentPool.length === 0) return;
+        idx = (idx + d + currentPool.length) % currentPool.length; 
+        updateCard(); 
+    }
+
+    function handleMark(status) {
+        if(currentPool.length === 0) return;
+        const item = currentPool[idx];
+        learnedMap[item.kana] = status;
+        if(!status) errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
+        saveAll();
+        updateCard();
+        if(status) setTimeout(() => moveCard(1), 400);
+    }
+
+    function shuffleWords() {
+        currentPool.sort(() => Math.random() - 0.5);
+        idx = 0; updateCard();
+    }
+
+    function toggleUnlearnedOnly() {
+        filterUnlearned = !filterUnlearned;
+        document.getElementById('filter-btn').classList.toggle('btn-blue', filterUnlearned);
+        currentPool = filterUnlearned ? allWords.filter(w => !learnedMap[w.kana]) : [...allWords];
+        idx = 0; updateCard();
+    }
+
+    // --- 測驗模式邏輯 ---
+    let correctAns = "";
+    function loadQuiz() {
+        if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足(至少需4個)"; return; }
+        document.getElementById('next-q-btn').style.display = "none";
+        const isJpToZh = Math.random() > 0.5;
+        const target = allWords[Math.floor(Math.random() * allWords.length)];
+        
+        document.getElementById('quiz-text').innerText = isJpToZh ? (target.kanji || target.kana) : target.chinese;
+        correctAns = isJpToZh ? target.chinese : (target.kanji || target.kana);
+
+        let options = [correctAns];
+        while(options.length < 4) {
+            let rand = allWords[Math.floor(Math.random() * allWords.length)];
+            let val = isJpToZh ? rand.chinese : (rand.kanji || rand.kana);
+            if(!options.includes(val)) options.push(val);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const optDiv = document.getElementById('quiz-options');
+        optDiv.innerHTML = "";
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => {
+                document.querySelectorAll('.option-btn').forEach(b => b.onclick = null);
+                if(opt === correctAns) btn.classList.add('correct');
+                else { btn.classList.add('wrong'); document.querySelectorAll('.option-btn').forEach(b => { if(b.innerText === correctAns) b.classList.add('correct'); }); }
+                document.getElementById('next-q-btn').style.display = "block";
+            };
+            optDiv.appendChild(btn);
+        });
+    }
+
+    // --- 核心儲存與匯入邏輯 ---
+    function saveAll() {
+        localStorage.setItem('jp_master_data', JSON.stringify(allWords));
+        localStorage.setItem('jp_learned_map', JSON.stringify(learnedMap));
+        localStorage.setItem('jp_error_stats', JSON.stringify(errorStats));
+        updateProgressBar();
+    }
+
+    function importJSON() {
+        try {
+            const input = document.getElementById('import-area').value.trim();
+            if(!input) return alert("請輸入 JSON 內容");
+            const data = JSON.parse(input);
             
-            // 反面
-            document.getElementById('back-zh').innerText = data.chinese;
-            document.getElementById('back-ex').innerText = data.example;
-            
-            // 計數器
-            document.getElementById('counter').innerText = `${currentIndex + 1} / ${vocabData.length}`;
-        }, 150);
+            if(Array.isArray(data)) {
+                const mode = confirm("點擊『確定』：覆蓋並取代現有清單\n點擊『取消』：將新單字加入現有清單");
+                if(mode) {
+                    allWords = data;
+                } else {
+                    const existingKanas = allWords.map(w => w.kana);
+                    const newData = data.filter(w => !existingKanas.includes(w.kana));
+                    allWords = allWords.concat(newData);
+                }
+                saveAll();
+                alert(`成功儲存！目前共有 ${allWords.length} 個單字。`);
+                document.getElementById('import-area').value = "";
+                currentPool = [...allWords];
+                idx = 0;
+                renderWordList();
+                updateCard();
+            } else {
+                alert("格式錯誤，必須是陣列 []");
+            }
+        } catch(e) { alert("JSON 語法錯誤，請檢查符號。"); }
     }
 
-    function flipCard() {
-        card.classList.toggle('is-flipped');
+    function exportJSON() {
+        const dataStr = JSON.stringify(allWords, null, 2);
+        document.getElementById('import-area').value = dataStr;
+        document.getElementById('import-area').select();
+        alert("已將單字資料轉為 JSON 貼在上方框內，您可以複製起來備份。");
     }
 
-    function nextCard() {
-        currentIndex = (currentIndex + 1) % vocabData.length;
-        updateCard();
+    function clearAllData() {
+        if(confirm("確定要刪除所有單字與學習進度嗎？此動作無法復原！")) {
+            localStorage.clear();
+            allWords = defaultWords;
+            learnedMap = {};
+            errorStats = {};
+            location.reload();
+        }
     }
 
-    function prevCard() {
-        currentIndex = (currentIndex - 1 + vocabData.length) % vocabData.length;
-        updateCard();
+    function renderWordList() {
+        const box = document.getElementById('full-list');
+        const query = document.getElementById('search-box').value.toLowerCase();
+        box.innerHTML = "";
+        allWords.filter(w => w.kana.includes(query) || w.chinese.includes(query) || (w.kanji && w.kanji.includes(query)))
+                .forEach(w => {
+            const item = document.createElement('div');
+            item.className = "word-item";
+            item.innerHTML = `<div><b>${w.kanji || w.kana}</b><br><small>${w.chinese}</small></div>
+                              <button class="btn-gray" onclick="toggleWordStat('${w.kana}')" style="padding:5px 10px; font-size:12px;">${learnedMap[w.kana]?'已會':'未會'}</button>`;
+            box.appendChild(item);
+        });
     }
 
-    function randomCard() {
-        currentIndex = Math.floor(Math.random() * vocabData.length);
-        updateCard();
+    function toggleWordStat(k) { learnedMap[k] = !learnedMap[k]; saveAll(); renderWordList(); }
+
+    // --- 統計邏輯 ---
+    function renderStats() {
+        const learnedCount = Object.values(learnedMap).filter(v => v).length;
+        const total = allWords.length;
+        const percent = Math.round((learnedCount / total) * 100) || 0;
+        document.getElementById('stat-percent').innerText = percent + "%";
+        document.getElementById('stat-count').innerText = `${learnedCount} / ${total}`;
+        
+        const weakOnes = Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        const weakBox = document.getElementById('weak-list');
+        weakBox.innerHTML = weakOnes.length ? "" : "尚無錯題紀錄";
+        weakOnes.forEach(([k, c]) => {
+            const div = document.createElement('div');
+            div.style = "padding:10px; border-bottom:1px solid #eee; font-size:14px;";
+            div.innerHTML = `<b>${k}</b> <span style="color:var(--danger); float:right;">錯 ${c} 次</span>`;
+            weakBox.appendChild(div);
+        });
     }
 
-    function speakJP(event) {
-        event.stopPropagation();
-        const data = vocabData[currentIndex];
-        // 優先朗讀假名
-        const textToSpeak = data.kana;
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'ja-JP';
-        utterance.rate = 0.8;
-        window.speechSynthesis.speak(utterance);
+    function updateProgressBar() {
+        const learnedCount = Object.values(learnedMap).filter(v => v).length;
+        const progress = (learnedCount / (allWords.length || 1)) * 100;
+        document.getElementById('main-progress').style.width = progress + "%";
     }
 
+    function speak(type) {
+        if(currentPool.length === 0) return;
+        const item = currentPool[idx];
+        const text = type === 'word' ? (item.kanji || item.kana) : item.example.split('(')[0];
+        window.speechSynthesis.cancel();
+        const ut = new SpeechSynthesisUtterance(text);
+        ut.lang = 'ja-JP';
+        ut.rate = type === 'word' ? 0.8 : 0.9;
+        window.speechSynthesis.speak(ut);
+    }
+
+    function startRecog() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SpeechRecognition) return alert("不支援語音辨識");
+        const rec = new SpeechRecognition();
+        rec.lang = 'ja-JP';
+        const bar = document.getElementById('voice-info');
+        rec.onstart = () => { bar.className = "listening"; bar.innerText = "正在聆聽..."; };
+        rec.onresult = (e) => {
+            const res = e.results[0][0].transcript;
+            const item = currentPool[idx];
+            if(res === item.kanji || res === item.kana) {
+                bar.innerText = "✅ 正確！(" + res + ")";
+                handleMark(true);
+            } else { bar.innerText = "❌ 聽到的是: " + res; }
+        };
+        rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2000); };
+        rec.start();
+    }
+
+    // 初始化顯示
     updateCard();
 </script>
-
 </body>
 </html>
