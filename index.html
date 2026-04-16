@@ -11,213 +11,178 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 80px; }
 
-        /* 頂部綠色進度條 */
+        /* 頂部進度條 */
         .progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 6px; background: var(--success); z-index: 1000; transition: width 0.3s; }
 
-        /* 標題 */
         header { text-align: center; padding: 20px 0; font-weight: bold; font-size: 1.1rem; }
 
         .app-container { padding: 0 20px; display: flex; justify-content: center; min-height: 80vh; align-items: center; }
 
-        /* 卡片樣式 (參考截圖) */
+        /* 測驗卡片容器 */
         .main-card {
             background: white; border-radius: 30px; width: 100%; max-width: 450px;
             padding: 40px 25px; box-shadow: var(--card-shadow); text-align: center;
+            position: relative;
         }
 
-        /* 測驗題目文字 */
-        .quiz-question { font-size: 2.2rem; color: var(--primary); font-weight: bold; margin-bottom: 30px; }
+        /* 題目日文文字 (截圖中的明後日) */
+        .quiz-question { font-size: 2.5rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
 
-        /* 選項按鈕 (參考截圖) */
+        /* 喇叭按鈕樣式 */
+        .audio-btn {
+            background: #f0f7ff; border: none; width: 50px; height: 50px;
+            border-radius: 50%; font-size: 1.5rem; color: var(--primary);
+            cursor: pointer; margin-bottom: 25px; transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .audio-btn:hover { background: #e1f0ff; transform: scale(1.1); }
+        .audio-btn:active { transform: scale(0.9); }
+
+        /* 選項按鈕 (截圖樣式) */
         .option-btn {
             display: block; width: 100%; padding: 18px; margin-bottom: 12px;
             background: white; border: 1px solid #eee; border-radius: 18px;
             font-size: 1.1rem; text-align: left; cursor: pointer; transition: 0.2s;
             box-sizing: border-box; font-weight: 500; padding-left: 25px;
         }
-        .option-btn:hover { background: #f9f9f9; transform: translateY(-2px); }
-        .option-btn.correct { background: var(--success); color: white; border-color: var(--success); }
-        .option-btn.wrong { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .option-btn:hover { background: #f9f9f9; transform: translateX(5px); }
+        .option-btn.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
+        .option-btn.wrong { background: #e74c3c !important; color: white !important; border-color: #e74c3c; }
 
-        /* 底部導航欄 (參考截圖) */
+        /* 底部導覽 */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg);
             display: flex; justify-content: space-around; padding: 10px 0;
             border-top: 1px solid #ddd; z-index: 999;
         }
-        .nav-item { text-align: center; flex: 1; cursor: pointer; color: #7f8c8d; }
+        .nav-item { text-align: center; flex: 1; cursor: pointer; color: #7f8c8d; text-decoration: none; }
         .nav-item.active { color: var(--primary); }
         .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 2px; }
         .nav-label { font-size: 0.75rem; font-weight: bold; }
 
-        /* 聽力播放按鈕 */
-        .audio-trigger { font-size: 3rem; cursor: pointer; color: var(--warning); margin-bottom: 20px; border:none; background:none; }
-
-        /* 頁面切換 */
         .page { display: none; width: 100%; }
         .page.active { display: block; }
 
-        /* 通用按鈕 */
-        .next-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; margin-top: 20px; font-size: 1rem; }
+        .next-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="progress-bar" id="top-progress"></div>
 
-<header id="page-title">📝 測驗模式</header>
+<header>測驗模式</header>
 
 <div class="app-container">
     <div id="page-quiz" class="page active">
         <div class="main-card">
-            <button class="audio-trigger" onclick="playQuizAudio()">🔊</button>
-            <div class="quiz-question" id="quiz-q">? ? ?</div>
-            <div id="quiz-options"></div>
+            <div class="quiz-question" id="quiz-q">...</div>
+            
+            <button class="audio-btn" onclick="playQuizAudio()">🔊</button>
+            
+            <div id="quiz-options">
+                </div>
             <button id="quiz-next" class="next-btn" style="display:none" onclick="startNewQuiz()">下一題</button>
         </div>
     </div>
 
-    <div id="page-study" class="page">
-        <div class="main-card" onclick="this.classList.toggle('flipped')">
-            <div id="study-kana" style="color:#888; margin-bottom:10px"></div>
-            <div id="study-kanji" style="font-size:2.5rem; font-weight:bold; color:var(--primary)"></div>
-            <hr style="margin:20px 0; border:0; border-top:1px solid #eee">
-            <div id="study-zh" style="font-size:1.5rem">點擊翻面</div>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px">
-            <button class="next-btn" onclick="prevWord()" style="background:#bdc3c7">上一個</button>
-            <button class="next-btn" onclick="nextWord()">下一個</button>
-        </div>
-    </div>
-
-    <div id="page-list" class="page"><div class="main-card">列表功能開發中</div></div>
-    <div id="page-stats" class="page"><div class="main-card">統計功能開發中</div></div>
+    <div id="page-study" class="page"><div class="main-card">學習模式內容</div></div>
 </div>
 
 <div class="bottom-nav">
-    <div class="nav-item" onclick="switchPage('study')">
-        <span class="nav-icon">📚</span><span class="nav-label">學習</span>
-    </div>
-    <div class="nav-item active" onclick="switchPage('quiz')">
-        <span class="nav-icon">📝</span><span class="nav-label">測驗</span>
-    </div>
-    <div class="nav-item" onclick="switchPage('list')">
-        <span class="nav-icon">🔍</span><span class="nav-label">列表</span>
-    </div>
-    <div class="nav-item" onclick="switchPage('stats')">
-        <span class="nav-icon">📊</span><span class="nav-label">統計</span>
-    </div>
+    <div class="nav-item" onclick="switchPage('study')"><span class="nav-icon">📚</span><span class="nav-label">學習</span></div>
+    <div class="nav-item active" onclick="switchPage('quiz')"><span class="nav-icon">📝</span><span class="nav-label">測驗</span></div>
+    <div class="nav-item"><span class="nav-icon">🔍</span><span class="nav-label">列表</span></div>
+    <div class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">統計</span></div>
 </div>
 
 <script>
-    // 單字資料
+    // 預設資料
     let vocabData = JSON.parse(localStorage.getItem('vocab_v_final')) || [
         { kana: "あした", kanji: "明日", zh: "明天" },
         { kana: "あさって", kanji: "明後日", zh: "後天" },
-        { kana: "あたま", kanji: "頭", zh: "頭" },
-        { kana: "あき", kanji: "秋", zh: "秋天" },
-        { kana: "わたし", kanji: "私", zh: "我" }
+        { kana: "あたま", kanji: "頭", zh: "腳" }, // 故意放截圖裡的選項
+        { kana: "アイスクリーム", kanji: "", zh: "冰淇淋" },
+        { kana: "あき", kanji: "秋", zh: "秋" }
     ];
 
-    let currentIndex = 0;
     let quizWord = null;
-
-    // --- TTS 語音設定 ---
     let jpVoice = null;
+
+    // 初始化語音
     function initVoice() {
         const voices = window.speechSynthesis.getVoices();
         jpVoice = voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja_JP') || voices[0];
     }
     window.speechSynthesis.onvoiceschanged = initVoice;
 
-    function speak(text) {
-        const utterance = new SpeechSynthesisUtterance(text);
+    function playQuizAudio() {
+        if (!quizWord) return;
+        const utterance = new SpeechSynthesisUtterance(quizWord.kana);
         if (jpVoice) utterance.voice = jpVoice;
         utterance.lang = 'ja-JP';
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
     }
 
-    // --- 聽力測驗邏輯 ---
+    // 開始新題目
     function startNewQuiz() {
-        if (vocabData.length < 4) return alert("單字量不足");
-        
         document.getElementById('quiz-next').style.display = 'none';
-        document.getElementById('top-progress').style.width = Math.random() * 100 + "%"; // 模擬進度
+        document.getElementById('top-progress').style.width = Math.floor(Math.random() * 100) + "%";
 
-        // 隨機選一個題目單字
+        // 選題目 (日文)
         quizWord = vocabData[Math.floor(Math.random() * vocabData.length)];
-        
-        // 截圖顯示的是：題目中文，選項日文
-        document.getElementById('quiz-q').innerText = quizWord.zh;
+        document.getElementById('quiz-q').innerText = quizWord.kanji || quizWord.kana;
 
-        // 產生 4 個選項
-        let options = [quizWord.kanji || quizWord.kana];
+        // 選 4 個選項 (中文)
+        let options = [quizWord.zh];
         while(options.length < 4) {
-            let rand = vocabData[Math.floor(Math.random() * vocabData.length)];
-            let val = rand.kanji || rand.kana;
-            if(!options.includes(val)) options.push(val);
+            let rand = vocabData[Math.floor(Math.random() * vocabData.length)].zh;
+            if(!options.includes(rand)) options.push(rand);
         }
         options.sort(() => Math.random() - 0.5);
 
         // 渲染選項
-        const optContainer = document.getElementById('quiz-options');
-        optContainer.innerHTML = '';
+        const container = document.getElementById('quiz-options');
+        container.innerHTML = '';
         options.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
             btn.innerText = opt;
-            btn.onclick = () => checkQuiz(btn, opt);
-            optContainer.appendChild(btn);
+            btn.onclick = () => checkAnswer(btn, opt);
+            container.appendChild(btn);
         });
 
-        // 聽力功能：自動播放
-        playQuizAudio();
+        // 自動播放一次
+        setTimeout(playQuizAudio, 500);
     }
 
-    function playQuizAudio() { if(quizWord) speak(quizWord.kana); }
-
-    function checkQuiz(btn, selected) {
-        const correct = quizWord.kanji || quizWord.kana;
+    function checkAnswer(btn, selected) {
         const allBtns = document.querySelectorAll('.option-btn');
         allBtns.forEach(b => b.disabled = true);
 
-        if(selected === correct) {
+        if (selected === quizWord.zh) {
             btn.classList.add('correct');
         } else {
             btn.classList.add('wrong');
-            allBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+            // 標示出正確的那一個
+            allBtns.forEach(b => {
+                if (b.innerText === quizWord.zh) b.classList.add('correct');
+            });
         }
         document.getElementById('quiz-next').style.display = 'block';
     }
 
-    // --- 頁面控制 ---
     function switchPage(p) {
+        // 簡單的分頁切換邏輯
         document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(nv => nv.classList.remove('active'));
-        
-        document.getElementById('page-'+p).classList.add('active');
-        document.querySelector(`.nav-item[onclick="switchPage('${p}')"]`).classList.add('active');
-
-        // 更新標題
-        const titles = { study: "📚 學習模式", quiz: "📝 測驗模式", list: "🔍 單字列表", stats: "📊 學習統計" };
-        document.getElementById('page-title').innerText = titles[p];
-
+        document.getElementById('page-' + p).classList.add('active');
         if(p === 'quiz') startNewQuiz();
-        if(p === 'study') updateStudyCard();
     }
 
-    function updateStudyCard() {
-        const data = vocabData[currentIndex];
-        document.getElementById('study-kana').innerText = data.kanji ? data.kana : "";
-        document.getElementById('study-kanji').innerText = data.kanji || data.kana;
-        document.getElementById('study-zh').innerText = data.zh;
-    }
-
-    function nextWord() { currentIndex = (currentIndex + 1) % vocabData.length; updateStudyCard(); }
-    function prevWord() { currentIndex = (currentIndex - 1 + vocabData.length) % vocabData.length; updateStudyCard(); }
-
-    window.onload = () => { initVoice(); startNewQuiz(); };
+    window.onload = () => {
+        initVoice();
+        startNewQuiz();
+    };
 </script>
 
 </body>
