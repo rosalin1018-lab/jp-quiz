@@ -3,343 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>日文學習旗艦版</title>
+    <title>日文學習旗艦版 Pro</title>
     <style>
         :root {
-            --primary: #4a90e2; 
-            --success: #2ecc71; 
-            --bg: #ebf2f6; 
-            --text: #2c3e50;
-            --nav-bg: #f8f9fa; 
-            --card-bg: #ffffff;
-            --card-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --primary: #4a90e2; --success: #2ecc71; --bg: #ebf2f6; --text: #2c3e50;
+            --nav-bg: #f8f9fa; --card-bg: #ffffff; --card-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 90px; }
 
-        body { 
-            font-family: -apple-system, "Noto Sans CJK TC", sans-serif; 
-            background: var(--bg); 
-            margin: 0; 
-            color: var(--text); 
-            padding-bottom: 90px; /* 為底部導航留空間 */
-            overflow-x: hidden;
-        }
+        /* 頂部進度條與設定欄 */
+        .top-bar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .progress-bar { width: 0%; height: 4px; background: var(--success); transition: width 0.3s; }
+        .settings-row { display: flex; justify-content: space-around; padding: 10px; font-size: 0.8rem; font-weight: bold; color: #7f8c8d; }
 
-        /* 頂部綠色進度條 */
-        .progress-bar { 
-            position: fixed; top: 0; left: 0; width: 0%; height: 6px; 
-            background: var(--success); z-index: 1000; transition: width 0.3s; 
-        }
+        header { text-align: center; padding: 60px 0 10px 0; font-weight: bold; font-size: 1.1rem; }
 
-        header { 
-            text-align: center; padding: 25px 0 15px 0; 
-            font-weight: bold; font-size: 1.2rem; 
-        }
+        .app-container { padding: 0 20px; display: flex; flex-direction: column; align-items: center; }
 
-        .app-container { 
-            padding: 0 20px; display: flex; flex-direction: column; align-items: center; 
-        }
-
-        /* 主卡片樣式 */
+        /* 主卡片 */
         .main-card {
-            background: var(--card-bg); border-radius: 35px; width: 100%; max-width: 450px;
-            padding: 40px 25px; box-shadow: var(--card-shadow); text-align: center;
-            min-height: 300px; display: flex; flex-direction: column; justify-content: center;
-            position: relative; transition: 0.3s;
+            background: var(--card-bg); border-radius: 30px; width: 100%; max-width: 450px;
+            padding: 40px 25px; box-shadow: var(--card-shadow); text-align: center; min-height: 280px;
+            display: flex; flex-direction: column; justify-content: center; position: relative;
         }
 
-        /* 題目文字樣式 */
-        .quiz-question { 
-            font-size: 2.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; 
-        }
+        .quiz-question { font-size: 2.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+        .listening-placeholder { font-size: 1.2rem; color: #95a5a6; margin-bottom: 20px; font-style: italic; }
 
-        /* 喇叭按鈕樣式 - 確保始終存在 */
+        /* 喇叭按鈕 */
         .audio-btn {
-            background: #f0f7ff; border: none; width: 60px; height: 60px;
-            border-radius: 50%; font-size: 1.8rem; color: var(--primary);
-            cursor: pointer; margin: 10px auto 25px auto; transition: 0.2s;
-            display: inline-flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+            background: #f0f7ff; border: none; width: 70px; height: 70px;
+            border-radius: 50%; font-size: 2rem; color: var(--primary);
+            cursor: pointer; margin: 0 auto 20px auto; display: inline-flex; align-items: center; justify-content: center;
         }
         .audio-btn:active { transform: scale(0.9); }
 
-        /* 選項按鈕樣式 */
-        .options-container { width: 100%; }
+        /* 選項按鈕 */
         .option-btn {
             display: block; width: 100%; padding: 18px; margin-bottom: 12px;
-            background: white; border: 1px solid #eee; border-radius: 20px;
+            background: white; border: 1px solid #eee; border-radius: 18px;
             font-size: 1.1rem; text-align: left; cursor: pointer; transition: 0.2s;
-            box-sizing: border-box; font-weight: 500; padding-left: 25px;
-            color: var(--primary);
+            padding-left: 25px; color: var(--primary); font-weight: 500;
         }
-        .option-btn.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
-        .option-btn.wrong { background: #e74c3c !important; color: white !important; border-color: #e74c3c; }
+        .option-btn.correct { background: var(--success) !important; color: white !important; }
+        .option-btn.wrong { background: #e74c3c !important; color: white !important; }
 
-        /* 底部導覽欄 */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg);
-            display: flex; justify-content: space-around; padding: 12px 0;
-            border-top: 1px solid #eee; z-index: 999;
-        }
-        .nav-item { text-align: center; flex: 1; cursor: pointer; color: #95a5a6; transition: 0.2s; }
+        /* 切換開關 (Switch) */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; margin-left: 5px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* 底部導航 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
+        .nav-item { text-align: center; flex: 1; cursor: pointer; color: #7f8c8d; }
         .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
-        .nav-label { font-size: 0.75rem; font-weight: bold; }
+        .nav-icon { font-size: 1.5rem; display: block; }
+        .nav-label { font-size: 0.7rem; font-weight: bold; }
 
-        /* 頁面切換控制 */
-        .page { display: none; width: 100%; animation: fadeIn 0.3s; }
+        .next-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .page { display: none; width: 100%; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .next-btn { 
-            width: 100%; padding: 16px; background: var(--primary); color: white; 
-            border: none; border-radius: 18px; font-weight: bold; margin-top: 15px; cursor: pointer;
-        }
     </style>
 </head>
 <body>
 
-<div class="progress-bar" id="top-progress"></div>
+<div class="top-bar">
+    <div class="progress-bar" id="top-progress"></div>
+    <div class="settings-row">
+        <span>聽力模式 <label class="switch"><input type="checkbox" id="toggle-listening" onchange="startNewQuiz()"><span class="slider"></span></label></span>
+        <span>隱藏漢字 <label class="switch"><input type="checkbox" id="toggle-hide-kanji" onchange="refreshCurrentView()"><span class="slider"></span></label></span>
+    </div>
+</div>
 
 <header id="page-title">測驗模式</header>
 
 <div class="app-container">
     <div id="page-quiz" class="page active">
         <div class="main-card">
-            <div class="quiz-question" id="quiz-q">...</div>
+            <div id="quiz-audio-section">
+                <button class="audio-btn" onclick="playQuizAudio()">🔊</button>
+                <div id="listening-text" class="listening-placeholder">聽音辨義...</div>
+            </div>
             
-            <button class="audio-btn" id="quiz-audio-btn" onclick="playQuizAudio()">🔊</button>
+            <div class="quiz-question" id="quiz-q"></div>
             
-            <div id="quiz-options" class="options-container">
-                </div>
-            
+            <div id="quiz-options"></div>
             <button id="quiz-next" class="next-btn" style="display:none" onclick="startNewQuiz()">下一題</button>
         </div>
     </div>
 
     <div id="page-study" class="page">
         <div class="main-card" onclick="flipStudyCard()">
-            <div id="study-front">
-                <div id="study-kana" style="color:#888; font-size:1.1rem"></div>
-                <div id="study-kanji" style="font-size:3rem; font-weight:bold; color:var(--primary)"></div>
-                <div style="margin-top:20px; color:#ccc; font-size:0.8rem">點擊翻面看答案</div>
-            </div>
-            <div id="study-back" style="display:none">
-                <div id="study-zh" style="font-size:2.2rem; font-weight:bold; color:var(--success)"></div>
-                <div id="study-ex" style="margin-top:20px; font-size:1rem; color:#666; background:#f9f9f9; padding:15px; border-radius:15px"></div>
-            </div>
+            <div id="study-kana" style="color:#888; font-size:1.2rem"></div>
+            <div id="study-kanji" style="font-size:3rem; font-weight:bold; color:var(--primary)"></div>
+            <div id="study-zh" style="display:none; font-size:2rem; color:var(--success); margin-top:20px"></div>
         </div>
         <div style="display:flex; gap:10px; margin-top:20px; width:100%; max-width:450px">
             <button class="next-btn" style="background:#bdc3c7" onclick="prevWord()">上一個</button>
             <button class="next-btn" onclick="nextWord()">下一個</button>
         </div>
     </div>
-
-    <div id="page-list" class="page">
-        <div class="main-card">
-            <h3>單字列表</h3>
-            <div id="vocab-list-container" style="text-align:left; max-height:400px; overflow-y:auto"></div>
-        </div>
-    </div>
-
-    <div id="page-stats" class="page">
-        <div class="main-card">
-            <h3>學習統計</h3>
-            <p id="stats-info">載入中...</p>
-            <button class="next-btn" onclick="exportData()">匯出資料 (JSON)</button>
-        </div>
-    </div>
 </div>
 
 <div class="bottom-nav">
-    <div class="nav-item" onclick="switchPage('study')">
-        <span class="nav-icon">📚</span><span class="nav-label">學習</span>
-    </div>
-    <div class="nav-item active" onclick="switchPage('quiz')">
-        <span class="nav-icon">📝</span><span class="nav-label">測驗</span>
-    </div>
-    <div class="nav-item" onclick="switchPage('list')">
-        <span class="nav-icon">🔍</span><span class="nav-label">列表</span>
-    </div>
-    <div class="nav-item" onclick="switchPage('stats')">
-        <span class="nav-icon">📊</span><span class="nav-label">統計</span>
-    </div>
+    <div class="nav-item" onclick="switchPage('study')"><span class="nav-icon">📚</span><span class="nav-label">學習</span></div>
+    <div class="nav-item active" onclick="switchPage('quiz')"><span class="nav-icon">📝</span><span class="nav-label">測驗</span></div>
+    <div class="nav-item"><span class="nav-icon">🔍</span><span class="nav-label">列表</span></div>
+    <div class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">統計</span></div>
 </div>
 
 <script>
-    // --- 資料初始化 ---
-    let vocabData = JSON.parse(localStorage.getItem('vocab_pro_data')) || [
-        { kana: "あした", kanji: "明日", zh: "明天", ex: "明日は日曜日です。" },
-        { kana: "あさって", kanji: "明後日", zh: "後天", ex: "明後日、旅行に行きます。" },
-        { kana: "あたま", kanji: "頭", zh: "頭", ex: "頭が痛いです。" },
-        { kana: "あき", kanji: "秋", zh: "秋天", ex: "秋は涼しいです。" },
-        { kana: "アイスクリーム", kanji: "", zh: "冰淇淋", ex: "アイスクリームを食べます。" },
-        { kana: "かける", kanji: "", zh: "戴上", ex: "眼鏡をかけます。" }
+    let vocabData = JSON.parse(localStorage.getItem('vocab_v_final')) || [
+        { kana: "あした", kanji: "明日", zh: "明天" },
+        { kana: "あさって", kanji: "明後日", zh: "後天" },
+        { kana: "あたま", kanji: "頭", zh: "頭" },
+        { kana: "あき", kanji: "秋", zh: "秋天" },
+        { kana: "かける", kanji: "", zh: "戴上" }
     ];
 
     let currentIndex = 0;
     let quizWord = null;
     let jpVoice = null;
 
-    // --- 語音功能 ---
     function initVoice() {
-        const voices = window.speechSynthesis.getVoices();
-        jpVoice = voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja_JP') || voices.find(v => v.lang.includes('ja'));
+        jpVoice = window.speechSynthesis.getVoices().find(v => v.lang.includes('ja')) || null;
     }
     window.speechSynthesis.onvoiceschanged = initVoice;
 
-    function playQuizAudio() {
-        if (!quizWord) return;
+    function speak(text) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(quizWord.kana);
-        if (jpVoice) utterance.voice = jpVoice;
-        utterance.lang = 'ja-JP';
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
+        const u = new SpeechSynthesisUtterance(text);
+        if (jpVoice) u.voice = jpVoice;
+        u.lang = 'ja-JP'; u.rate = 0.9;
+        window.speechSynthesis.speak(u);
     }
 
-    // --- 測驗邏輯 ---
+    // --- 聽力與測驗邏輯 ---
     function startNewQuiz() {
-        if (vocabData.length < 4) return alert("請先在學習模式中增加更多單字");
-
-        // 確保喇叭一定顯示
-        document.getElementById('quiz-audio-btn').style.display = 'inline-flex';
+        const isListeningMode = document.getElementById('toggle-listening').checked;
+        const hideKanji = document.getElementById('toggle-hide-kanji').checked;
+        
         document.getElementById('quiz-next').style.display = 'none';
-        document.getElementById('top-progress').style.width = Math.floor(Math.random() * 100) + "%";
+        document.getElementById('top-progress').style.width = Math.random() * 100 + "%";
 
-        // 隨機決定模式：0(看日選中), 1(看中選日)
-        const mode = Math.floor(Math.random() * 2);
         quizWord = vocabData[Math.floor(Math.random() * vocabData.length)];
 
-        const qContainer = document.getElementById('quiz-q');
-        const optContainer = document.getElementById('quiz-options');
-        optContainer.innerHTML = '';
-
-        let options = [];
-
-        if (mode === 0) {
-            // 日翻中
-            qContainer.innerText = quizWord.kanji || quizWord.kana;
-            options = [quizWord.zh];
-            while(options.length < 4) {
-                let r = vocabData[Math.floor(Math.random() * vocabData.length)].zh;
-                if(!options.includes(r)) options.push(r);
-            }
+        // 處理聽力模式 UI
+        if (isListeningMode) {
+            document.getElementById('quiz-audio-section').style.display = 'block';
+            document.getElementById('quiz-q').style.display = 'none';
+            setTimeout(playQuizAudio, 300);
         } else {
-            // 中翻日
-            qContainer.innerText = quizWord.zh;
-            options = [quizWord.kanji || quizWord.kana];
-            while(options.length < 4) {
-                let rWord = vocabData[Math.floor(Math.random() * vocabData.length)];
-                let rVal = rWord.kanji || rWord.kana;
-                if(!options.includes(rVal)) options.push(rVal);
-            }
+            document.getElementById('quiz-audio-section').style.display = 'none';
+            document.getElementById('quiz-q').style.display = 'block';
+            // 處理隱藏漢字
+            document.getElementById('quiz-q').innerText = (hideKanji || !quizWord.kanji) ? quizWord.kana : quizWord.kanji;
         }
 
+        // 選項永遠顯示中文意思 (聽音辨義 / 看日選中)
+        let options = [quizWord.zh];
+        while(options.length < 4) {
+            let r = vocabData[Math.floor(Math.random() * vocabData.length)].zh;
+            if(!options.includes(r)) options.push(r);
+        }
         options.sort(() => Math.random() - 0.5);
 
+        const container = document.getElementById('quiz-options');
+        container.innerHTML = '';
         options.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
             btn.innerText = opt;
-            btn.onclick = () => checkQuiz(btn, opt, mode);
-            optContainer.appendChild(btn);
+            btn.onclick = () => {
+                const all = document.querySelectorAll('.option-btn');
+                all.forEach(b => b.disabled = true);
+                if(opt === quizWord.zh) btn.classList.add('correct');
+                else {
+                    btn.classList.add('wrong');
+                    all.forEach(b => { if(b.innerText === quizWord.zh) b.classList.add('correct'); });
+                }
+                document.getElementById('quiz-next').style.display = 'block';
+            };
+            container.appendChild(btn);
         });
-
-        // 題目產生後自動播放語音
-        setTimeout(playQuizAudio, 300);
     }
 
-    function checkQuiz(btn, selected, mode) {
-        const correct = (mode === 0) ? quizWord.zh : (quizWord.kanji || quizWord.kana);
-        const allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(b => b.disabled = true);
-
-        if (selected === correct) {
-            btn.classList.add('correct');
-        } else {
-            btn.classList.add('wrong');
-            allBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
-        }
-        document.getElementById('quiz-next').style.display = 'block';
-    }
-
-    // --- 分頁與導航 ---
-    function switchPage(p) {
-        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(nv => nv.classList.remove('active'));
-        
-        document.getElementById('page-'+p).classList.add('active');
-        document.querySelector(`.nav-item[onclick="switchPage('${p}')"]`).classList.add('active');
-
-        const titles = { study: "學習模式", quiz: "測驗模式", list: "單字列表", stats: "學習統計" };
-        document.getElementById('page-title').innerText = titles[p];
-
-        if (p === 'quiz') startNewQuiz();
-        if (p === 'study') updateStudyCard();
-        if (p === 'list') renderVocabList();
-        if (p === 'stats') updateStats();
-    }
+    function playQuizAudio() { if(quizWord) speak(quizWord.kana); }
 
     // --- 學習模式邏輯 ---
     function updateStudyCard() {
         const data = vocabData[currentIndex];
-        document.getElementById('study-kana').innerText = data.kanji ? data.kana : "";
-        document.getElementById('study-kanji').innerText = data.kanji || data.kana;
-        document.getElementById('study-zh').innerText = data.zh;
-        document.getElementById('study-ex').innerText = data.ex || "無例句";
-        document.getElementById('study-front').style.display = 'block';
-        document.getElementById('study-back').style.display = 'none';
+        const hideKanji = document.getElementById('toggle-hide-kanji').checked;
+        
+        document.getElementById('study-kana').innerText = (data.kanji && !hideKanji) ? data.kana : "";
+        document.getElementById('study-kanji').innerText = (hideKanji || !data.kanji) ? data.kana : data.kanji;
+        document.getElementById('study-zh').style.display = 'none';
     }
 
     function flipStudyCard() {
-        const front = document.getElementById('study-front');
-        const back = document.getElementById('study-back');
-        if (front.style.display === 'none') {
-            front.style.display = 'block'; back.style.display = 'none';
+        const zh = document.getElementById('study-zh');
+        if(zh.style.display === 'none') {
+            zh.innerText = vocabData[currentIndex].zh;
+            zh.style.display = 'block';
+            speak(vocabData[currentIndex].kana);
         } else {
-            front.style.display = 'none'; back.style.display = 'block';
-            // 翻開答案時自動朗讀
-            const data = vocabData[currentIndex];
-            const utterance = new SpeechSynthesisUtterance(data.kana);
-            if (jpVoice) utterance.voice = jpVoice;
-            window.speechSynthesis.speak(utterance);
+            zh.style.display = 'none';
         }
+    }
+
+    function refreshCurrentView() {
+        const activePage = document.querySelector('.page.active').id;
+        if(activePage === 'page-quiz') startNewQuiz();
+        else if(activePage === 'page-study') updateStudyCard();
+    }
+
+    function switchPage(p) {
+        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(nv => nv.classList.remove('active'));
+        document.getElementById('page-'+p).classList.add('active');
+        document.querySelector(`.nav-item[onclick="switchPage('${p}')"]`).classList.add('active');
+        refreshCurrentView();
     }
 
     function nextWord() { currentIndex = (currentIndex + 1) % vocabData.length; updateStudyCard(); }
     function prevWord() { currentIndex = (currentIndex - 1 + vocabData.length) % vocabData.length; updateStudyCard(); }
 
-    // --- 其他功能 ---
-    function renderVocabList() {
-        const container = document.getElementById('vocab-list-container');
-        container.innerHTML = vocabData.map((v, i) => `
-            <div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between">
-                <span><b>${v.kanji || v.kana}</b> (${v.kana})</span>
-                <span>${v.zh}</span>
-            </div>
-        `).join('');
-    }
-
-    function updateStats() {
-        document.getElementById('stats-info').innerText = `目前總單字量：${vocabData.length} 字`;
-    }
-
-    function exportData() {
-        const dataStr = JSON.stringify(vocabData, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = "vocab_data.json"; a.click();
-    }
-
-    // 啟動
-    window.onload = () => {
-        initVoice();
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = initVoice;
-        }
-        switchPage('quiz'); // 預設開啟測驗模式
-    };
+    window.onload = () => { initVoice(); startNewQuiz(); };
 </script>
-
 </body>
 </html>
