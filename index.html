@@ -43,7 +43,7 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 單字卡 */
+        /* 單字卡視覺 */
         .card-box { perspective: 1000px; width: 100%; height: 320px; margin-bottom: 20px; }
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .card-inner.flipped { transform: rotateY(180deg); }
@@ -62,19 +62,25 @@
         .option-btn.correct { background: #d4edda; border-color: var(--success); color: #155724; }
         .option-btn.wrong { background: #f8d7da; border-color: var(--danger); color: #721c24; }
 
-        /* 其他介面 */
+        /* 資料管理面板 (與圖片樣式一致) */
+        .mgmt-card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; width: 100%; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .mgmt-title { margin-top: 0; margin-bottom: 15px; font-size: 22px; font-weight: bold; color: #34495e; }
+        .import-area { width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 15px; padding: 12px; box-sizing: border-box; background: #fff; font-size: 16px; color: #7f8c8d; resize: none; margin-bottom: 15px; }
+
+        /* 按鈕系統 */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 12px; }
+        button { border: none; padding: 16px; border-radius: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-blue { background: #4a90e2; color: white; }
+        .btn-green { background: #2ecc71; color: white; }
+        .btn-red { background: #e74c3c; color: white; }
+        .btn-light-red { background: #f08080; color: white; }
+        .btn-gray { background: #e0e0e0; color: #666; }
+        .btn-round { border-radius: 50%; width: 60px; height: 60px; font-size: 24px; margin: 0 auto 15px auto; }
+        button:active { transform: scale(0.96); }
+
         .search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; }
         .word-list { width: 100%; background: white; border-radius: 15px; overflow: hidden; }
         .word-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; }
-
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 15px; }
-        button { border: none; padding: 14px; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-green { background: var(--success); color: white; }
-        .btn-red { background: var(--danger); color: white; }
-        .btn-gray { background: #e0e0e0; color: #666; }
-        .btn-round { border-radius: 50%; width: 60px; height: 60px; font-size: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; }
-        button:active { transform: scale(0.96); }
 
         nav { height: 65px; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
         .tab { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 12px; color: #999; cursor: pointer; font-weight: bold; }
@@ -142,11 +148,17 @@
     </section>
 
     <section id="list-view" class="view-section">
-        <div style="background:white; padding:15px; border-radius:15px; margin-bottom:20px;">
-            <h3 style="margin-top:0">動態匯入</h3>
-            <textarea id="import-area" style="width:100%; height:80px; border:1px solid #ddd; border-radius:10px; padding:8px;" placeholder='貼上 JSON 陣列...'></textarea>
-            <button class="btn-green" style="width:100%; margin-top:8px;" onclick="importJSON()">匯入並更新</button>
+        <div class="mgmt-card">
+            <div class="mgmt-title">資料管理</div>
+            <textarea id="import-area" class="import-area" placeholder='貼上 JSON 格式單字...'></textarea>
+            
+            <div class="grid-2">
+                <button class="btn-green" onclick="importJSON()">💾 儲存匯入</button>
+                <button class="btn-blue" onclick="exportBackup()">📤 導出備份</button>
+            </div>
+            <button class="btn-light-red" style="width:100%;" onclick="clearAllData()">🗑️ 清空所有單字與進度</button>
         </div>
+
         <input type="text" class="search-input" id="search-box" placeholder="搜尋單字、中文或假名..." oninput="renderWordList()">
         <div class="word-list" id="full-list"></div>
     </section>
@@ -172,12 +184,15 @@
 </nav>
 
 <script>
-    // --- 資料管理核心 ---
-    let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || [
+    // --- 初始預設資料 ---
+    const defaultData = [
         {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は学生です。(我是學生。)"},
-        {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは学生です。(陳先生是學生。)"},
+        {"kana": "がくせい", "kanji": "学生", "chinese": "學生", "example": "陳さんは学生です。(陳先生是學生。)"},
         {"kana": "にほん", "kanji": "日本", "chinese": "日本", "example": "日本へ行きます。(去日本。)"}
     ];
+
+    // --- 資料管理核心 ---
+    let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || [...defaultData];
     let learnedMap = JSON.parse(localStorage.getItem('jp_learned_map')) || {};
     let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
 
@@ -186,7 +201,7 @@
     let filterUnlearned = false;
     let quizTarget = null;
 
-    // --- 介面控制 ---
+    // --- 導航控制 ---
     function changeTab(tabId, el) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -201,12 +216,13 @@
 
     // --- 學習模式 ---
     function updateCard() {
+        const rubyBox = document.getElementById('ruby-display');
         if(currentPool.length === 0) {
-            document.getElementById('ruby-display').innerHTML = "目前無單字";
+            rubyBox.innerHTML = "目前無符合條件的單字";
             return;
         }
         const item = currentPool[idx];
-        document.getElementById('ruby-display').innerHTML = item.kanji ? `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>` : item.kana;
+        rubyBox.innerHTML = item.kanji ? `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>` : item.kana;
         document.getElementById('zh-display').innerText = item.chinese;
         const parts = item.example.split('(');
         document.getElementById('ex-jp-display').innerText = parts[0].trim();
@@ -217,9 +233,15 @@
         updateProgressBar();
     }
 
-    function moveCard(d) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); }
+    function moveCard(d) { 
+        if(currentPool.length > 0) {
+            idx = (idx + d + currentPool.length) % currentPool.length; 
+            updateCard(); 
+        }
+    }
 
     function handleMark(status) {
+        if(currentPool.length === 0) return;
         const item = currentPool[idx];
         learnedMap[item.kana] = status;
         if(!status) errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
@@ -240,9 +262,13 @@
         idx = 0; updateCard();
     }
 
-    // --- 測驗模式 (含聽力與隱藏漢字) ---
+    // --- 測驗模式 ---
     function loadQuiz() {
-        if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足(至少需4個)"; return; }
+        if(allWords.length < 4) { 
+            document.getElementById('quiz-text').innerText = "單字不足(至少需4個)"; 
+            document.getElementById('quiz-options').innerHTML = "";
+            return; 
+        }
         
         const isAudioMode = document.getElementById('audio-quiz-check').checked;
         const isHideKanji = document.getElementById('hide-kanji-check').checked;
@@ -283,7 +309,9 @@
                     btn.classList.add('wrong');
                     errorStats[quizTarget.kana] = (errorStats[quizTarget.kana] || 0) + 1;
                     saveAll();
-                    document.querySelectorAll('.option-btn').forEach(b => { if(b.innerText === quizTarget.chinese) b.classList.add('correct'); });
+                    document.querySelectorAll('.option-btn').forEach(b => { 
+                        if(b.innerText === quizTarget.chinese) b.classList.add('correct'); 
+                    });
                 }
                 nextBtn.style.display = "block";
             };
@@ -295,12 +323,43 @@
         if(!quizTarget) return;
         window.speechSynthesis.cancel();
         const ut = new SpeechSynthesisUtterance(quizTarget.kanji || quizTarget.kana);
-        ut.lang = 'ja-JP';
-        ut.rate = 0.8;
+        ut.lang = 'ja-JP'; ut.rate = 0.8;
         window.speechSynthesis.speak(ut);
     }
 
-    // --- 清單與統計 ---
+    // --- 資料管理面板功能 ---
+    function importJSON() {
+        const area = document.getElementById('import-area');
+        try {
+            const data = JSON.parse(area.value);
+            if(Array.isArray(data)) {
+                allWords = data;
+                saveAll();
+                alert("匯入成功！已更新 " + data.length + " 個單字。");
+                location.reload();
+            } else { alert("格式錯誤：必須是 JSON 陣列。"); }
+        } catch(e) { alert("JSON 格式解析失敗，請確認標點符號。"); }
+    }
+
+    function exportBackup() {
+        const backup = JSON.stringify(allWords, null, 2);
+        document.getElementById('import-area').value = backup;
+        alert("已導出備份！請複製輸入框中的內容並存放在安全的地方。");
+    }
+
+    function clearAllData() {
+        if(confirm("警告：確定要清空所有單字與學習進度嗎？此操作無法撤銷。")) {
+            localStorage.clear();
+            allWords = [...defaultData];
+            learnedMap = {};
+            errorStats = {};
+            saveAll();
+            alert("已清空，恢復初始設定。");
+            location.reload();
+        }
+    }
+
+    // --- 列表與搜尋 ---
     function renderWordList() {
         const box = document.getElementById('full-list');
         const query = document.getElementById('search-box').value.toLowerCase();
@@ -315,18 +374,10 @@
         });
     }
 
-    function toggleWordStat(k) { learnedMap[k] = !learnedMap[k]; saveAll(); renderWordList(); }
-
-    function importJSON() {
-        try {
-            const data = JSON.parse(document.getElementById('import-area').value);
-            if(Array.isArray(data)) {
-                allWords = data;
-                saveAll();
-                alert("匯入成功！共 " + data.length + " 個單字");
-                location.reload();
-            }
-        } catch(e) { alert("JSON 格式錯誤"); }
+    function toggleWordStat(k) { 
+        learnedMap[k] = !learnedMap[k]; 
+        saveAll(); 
+        renderWordList(); 
     }
 
     function renderStats() {
@@ -360,19 +411,19 @@
         document.getElementById('main-progress').style.width = ((learnedCount / allWords.length) * 100) + "%";
     }
 
+    // --- 音訊與語音 ---
     function speak(type) {
         const item = currentPool[idx];
         const text = type === 'word' ? (item.kanji || item.kana) : item.example.split('(')[0];
         window.speechSynthesis.cancel();
         const ut = new SpeechSynthesisUtterance(text);
-        ut.lang = 'ja-JP';
-        ut.rate = type === 'word' ? 0.8 : 0.9;
+        ut.lang = 'ja-JP'; ut.rate = type === 'word' ? 0.8 : 0.9;
         window.speechSynthesis.speak(ut);
     }
 
     function startRecog() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(!SpeechRecognition) return alert("不支援語音辨識");
+        if(!SpeechRecognition) return alert("您的設備不支援語音辨識。");
         const rec = new SpeechRecognition();
         rec.lang = 'ja-JP';
         const bar = document.getElementById('voice-info');
@@ -389,6 +440,7 @@
         rec.start();
     }
 
+    // 啟動 App
     updateCard();
 </script>
 </body>
