@@ -9,34 +9,42 @@
             --primary: #4a90e2; --success: #2ecc71; --bg: #ebf2f6; --text: #2c3e50;
             --nav-bg: #f8f9fa; --card-bg: #ffffff; --card-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 90px; }
 
-        /* 頂部進度條與設定欄 */
-        .top-bar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .progress-bar { width: 0%; height: 4px; background: var(--success); transition: width 0.3s; }
-        .settings-row { display: flex; justify-content: space-around; padding: 10px; font-size: 0.8rem; font-weight: bold; color: #7f8c8d; }
+        body { 
+            font-family: -apple-system, sans-serif; background: var(--bg); 
+            margin: 0; color: var(--text); padding-bottom: 90px; overflow-x: hidden;
+        }
 
-        header { text-align: center; padding: 60px 0 10px 0; font-weight: bold; font-size: 1.1rem; }
+        /* 頂部設定與進度條 */
+        .top-bar {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: white; border-bottom: 1px solid #eee;
+        }
+        .progress-bar { width: 0%; height: 4px; background: var(--success); transition: 0.3s; }
+        .settings-row {
+            display: flex; justify-content: space-around; padding: 12px;
+            font-size: 0.85rem; font-weight: bold; color: #7f8c8d;
+        }
+
+        header { text-align: center; padding: 80px 0 10px 0; font-weight: bold; font-size: 1.2rem; }
 
         .app-container { padding: 0 20px; display: flex; flex-direction: column; align-items: center; }
 
-        /* 主卡片 */
+        /* 主卡片樣式 */
         .main-card {
             background: var(--card-bg); border-radius: 30px; width: 100%; max-width: 450px;
-            padding: 40px 25px; box-shadow: var(--card-shadow); text-align: center; min-height: 280px;
-            display: flex; flex-direction: column; justify-content: center; position: relative;
+            padding: 40px 25px; box-shadow: var(--card-shadow); text-align: center;
+            min-height: 300px; display: flex; flex-direction: column; justify-content: center;
         }
 
         .quiz-question { font-size: 2.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
-        .listening-placeholder { font-size: 1.2rem; color: #95a5a6; margin-bottom: 20px; font-style: italic; }
 
-        /* 喇叭按鈕 */
-        .audio-btn {
-            background: #f0f7ff; border: none; width: 70px; height: 70px;
-            border-radius: 50%; font-size: 2rem; color: var(--primary);
-            cursor: pointer; margin: 0 auto 20px auto; display: inline-flex; align-items: center; justify-content: center;
+        /* 聽力模式大喇叭 */
+        .quiz-audio-btn {
+            background: #f0f7ff; border: none; width: 80px; height: 80px;
+            border-radius: 50%; font-size: 2.5rem; color: var(--primary);
+            cursor: pointer; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center;
         }
-        .audio-btn:active { transform: scale(0.9); }
 
         /* 選項按鈕 */
         .option-btn {
@@ -45,25 +53,28 @@
             font-size: 1.1rem; text-align: left; cursor: pointer; transition: 0.2s;
             padding-left: 25px; color: var(--primary); font-weight: 500;
         }
-        .option-btn.correct { background: var(--success) !important; color: white !important; }
-        .option-btn.wrong { background: #e74c3c !important; color: white !important; }
+        .option-btn.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
+        .option-btn.wrong { background: #e74c3c !important; color: white !important; border-color: #e74c3c; }
 
-        /* 切換開關 (Switch) */
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; margin-left: 5px; }
+        /* 切換開關 (Switch) UI */
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; margin-left: 6px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked + .slider:before { transform: translateX(14px); }
 
-        /* 底部導航 */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
-        .nav-item { text-align: center; flex: 1; cursor: pointer; color: #7f8c8d; }
+        /* 底部導航欄 */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg);
+            display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #ddd;
+        }
+        .nav-item { text-align: center; flex: 1; cursor: pointer; color: #95a5a6; }
         .nav-item.active { color: var(--primary); }
         .nav-icon { font-size: 1.5rem; display: block; }
-        .nav-label { font-size: 0.7rem; font-weight: bold; }
+        .nav-label { font-size: 0.75rem; font-weight: bold; }
 
-        .next-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .next-btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 18px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .page { display: none; width: 100%; }
         .page.active { display: block; }
     </style>
@@ -73,8 +84,8 @@
 <div class="top-bar">
     <div class="progress-bar" id="top-progress"></div>
     <div class="settings-row">
-        <span>聽力模式 <label class="switch"><input type="checkbox" id="toggle-listening" onchange="startNewQuiz()"><span class="slider"></span></label></span>
-        <span>隱藏漢字 <label class="switch"><input type="checkbox" id="toggle-hide-kanji" onchange="refreshCurrentView()"><span class="slider"></span></label></span>
+        <span>聽力測驗 <label class="switch"><input type="checkbox" id="toggle-listening" onchange="startNewQuiz()"><span class="slider"></span></label></span>
+        <span>隱藏漢字 <label class="switch"><input type="checkbox" id="toggle-hide-kanji" onchange="refreshView()"><span class="slider"></span></label></span>
     </div>
 </div>
 
@@ -83,9 +94,9 @@
 <div class="app-container">
     <div id="page-quiz" class="page active">
         <div class="main-card">
-            <div id="quiz-audio-section">
-                <button class="audio-btn" onclick="playQuizAudio()">🔊</button>
-                <div id="listening-text" class="listening-placeholder">聽音辨義...</div>
+            <div id="quiz-audio-ui" style="display:none">
+                <button class="quiz-audio-btn" onclick="playQuizAudio()">🔊</button>
+                <div style="color:#95a5a6; font-style:italic; margin-bottom:20px">聽音辨義...</div>
             </div>
             
             <div class="quiz-question" id="quiz-q"></div>
@@ -97,9 +108,9 @@
 
     <div id="page-study" class="page">
         <div class="main-card" onclick="flipStudyCard()">
-            <div id="study-kana" style="color:#888; font-size:1.2rem"></div>
+            <div id="study-kana" style="color:#888; font-size:1.2rem; margin-bottom:8px"></div>
             <div id="study-kanji" style="font-size:3rem; font-weight:bold; color:var(--primary)"></div>
-            <div id="study-zh" style="display:none; font-size:2rem; color:var(--success); margin-top:20px"></div>
+            <div id="study-zh" style="display:none; font-size:2.2rem; color:var(--success); margin-top:20px"></div>
         </div>
         <div style="display:flex; gap:10px; margin-top:20px; width:100%; max-width:450px">
             <button class="next-btn" style="background:#bdc3c7" onclick="prevWord()">上一個</button>
@@ -116,6 +127,7 @@
 </div>
 
 <script>
+    // 預設題庫 (會從 localStorage 讀取)
     let vocabData = JSON.parse(localStorage.getItem('vocab_v_final')) || [
         { kana: "あした", kanji: "明日", zh: "明天" },
         { kana: "あさって", kanji: "明後日", zh: "後天" },
@@ -128,8 +140,10 @@
     let quizWord = null;
     let jpVoice = null;
 
+    // --- 語音初始化 ---
     function initVoice() {
-        jpVoice = window.speechSynthesis.getVoices().find(v => v.lang.includes('ja')) || null;
+        const voices = window.speechSynthesis.getVoices();
+        jpVoice = voices.find(v => v.lang.includes('ja')) || voices[0];
     }
     window.speechSynthesis.onvoiceschanged = initVoice;
 
@@ -141,29 +155,29 @@
         window.speechSynthesis.speak(u);
     }
 
-    // --- 聽力與測驗邏輯 ---
+    // --- 測驗邏輯 ---
     function startNewQuiz() {
-        const isListeningMode = document.getElementById('toggle-listening').checked;
+        const isListening = document.getElementById('toggle-listening').checked;
         const hideKanji = document.getElementById('toggle-hide-kanji').checked;
         
         document.getElementById('quiz-next').style.display = 'none';
-        document.getElementById('top-progress').style.width = Math.random() * 100 + "%";
+        document.getElementById('top-progress').style.width = Math.floor(Math.random() * 100) + "%";
 
         quizWord = vocabData[Math.floor(Math.random() * vocabData.length)];
 
-        // 處理聽力模式 UI
-        if (isListeningMode) {
-            document.getElementById('quiz-audio-section').style.display = 'block';
+        // 題目顯示邏輯
+        if (isListening) {
+            document.getElementById('quiz-audio-ui').style.display = 'block';
             document.getElementById('quiz-q').style.display = 'none';
             setTimeout(playQuizAudio, 300);
         } else {
-            document.getElementById('quiz-audio-section').style.display = 'none';
+            document.getElementById('quiz-audio-ui').style.display = 'none';
             document.getElementById('quiz-q').style.display = 'block';
-            // 處理隱藏漢字
+            // 判斷是否隱藏漢字
             document.getElementById('quiz-q').innerText = (hideKanji || !quizWord.kanji) ? quizWord.kana : quizWord.kanji;
         }
 
-        // 選項永遠顯示中文意思 (聽音辨義 / 看日選中)
+        // 產生選項 (永遠是中文，聽音/看日選中)
         let options = [quizWord.zh];
         while(options.length < 4) {
             let r = vocabData[Math.floor(Math.random() * vocabData.length)].zh;
@@ -178,12 +192,12 @@
             btn.className = 'option-btn';
             btn.innerText = opt;
             btn.onclick = () => {
-                const all = document.querySelectorAll('.option-btn');
-                all.forEach(b => b.disabled = true);
+                const btns = document.querySelectorAll('.option-btn');
+                btns.forEach(b => b.disabled = true);
                 if(opt === quizWord.zh) btn.classList.add('correct');
                 else {
                     btn.classList.add('wrong');
-                    all.forEach(b => { if(b.innerText === quizWord.zh) b.classList.add('correct'); });
+                    btns.forEach(b => { if(b.innerText === quizWord.zh) b.classList.add('correct'); });
                 }
                 document.getElementById('quiz-next').style.display = 'block';
             };
@@ -193,7 +207,7 @@
 
     function playQuizAudio() { if(quizWord) speak(quizWord.kana); }
 
-    // --- 學習模式邏輯 ---
+    // --- 學習與通用邏輯 ---
     function updateStudyCard() {
         const data = vocabData[currentIndex];
         const hideKanji = document.getElementById('toggle-hide-kanji').checked;
@@ -209,15 +223,12 @@
             zh.innerText = vocabData[currentIndex].zh;
             zh.style.display = 'block';
             speak(vocabData[currentIndex].kana);
-        } else {
-            zh.style.display = 'none';
-        }
+        } else { zh.style.display = 'none'; }
     }
 
-    function refreshCurrentView() {
-        const activePage = document.querySelector('.page.active').id;
-        if(activePage === 'page-quiz') startNewQuiz();
-        else if(activePage === 'page-study') updateStudyCard();
+    function refreshView() {
+        if(document.getElementById('page-quiz').classList.contains('active')) startNewQuiz();
+        else updateStudyCard();
     }
 
     function switchPage(p) {
@@ -225,7 +236,7 @@
         document.querySelectorAll('.nav-item').forEach(nv => nv.classList.remove('active'));
         document.getElementById('page-'+p).classList.add('active');
         document.querySelector(`.nav-item[onclick="switchPage('${p}')"]`).classList.add('active');
-        refreshCurrentView();
+        refreshView();
     }
 
     function nextWord() { currentIndex = (currentIndex + 1) % vocabData.length; updateStudyCard(); }
