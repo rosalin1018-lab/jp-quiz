@@ -37,7 +37,7 @@
         .progress-container { height: 6px; background: #e0e0e0; width: 100%; }
         .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.4s; }
 
-        main { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        main { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         .view-section { display: none; width: 100%; max-width: 480px; animation: fadeIn 0.3s ease; }
         .view-section.active { display: flex; flex-direction: column; }
 
@@ -47,16 +47,18 @@
         .card-box { perspective: 1000px; width: 100%; height: 320px; margin-bottom: 20px; }
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .card-inner.flipped { transform: rotateY(180deg); }
-        .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: var(--card-white); border-radius: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 30px; box-sizing: border-box; }
+        .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: var(--card-white); border-radius: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 25px; box-sizing: border-box; }
         .face-back { transform: rotateY(180deg); border: 2px solid var(--primary); }
 
-        ruby { font-size: 52px; font-weight: bold; text-align: center; }
+        .word-text { font-size: 48px; font-weight: bold; text-align: center; line-height: 1.2; }
+        ruby { font-size: 48px; font-weight: bold; text-align: center; }
         rt { font-size: 18px; color: #888; letter-spacing: 2px; }
 
         .example-box { background: #f8f9fa; padding: 15px; border-radius: 15px; width: 100%; border-left: 4px solid var(--primary); margin-top: 15px; }
 
         /* 配置區 */
-        .config-bar { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; font-size: 14px; color: #666; justify-content: center; }
+        .config-bar { display: flex; gap: 15px; margin-bottom: 12px; width: 100%; font-size: 13px; color: #666; justify-content: center; flex-wrap: wrap; }
+        .config-bar label { display: flex; align-items: center; gap: 4px; background: #fff; padding: 5px 10px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         /* 測驗 UI */
         .quiz-config { display: flex; justify-content: space-around; background: #fff; padding: 10px; border-radius: 12px; margin-bottom: 15px; width: 100%; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -65,21 +67,14 @@
         .option-btn.correct { background: #d4edda; border-color: var(--success); color: #155724; }
         .option-btn.wrong { background: #f8d7da; border-color: var(--danger); color: #721c24; }
 
-        /* 資料管理面板 */
-        .mgmt-card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; width: 100%; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .mgmt-title { margin-top: 0; margin-bottom: 15px; font-size: 22px; font-weight: bold; color: #34495e; }
-        .import-area { width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 15px; padding: 12px; box-sizing: border-box; background: #fff; font-size: 16px; color: #2c3e50; resize: none; margin-bottom: 15px; }
-
         /* 按鈕系統 */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 12px; }
-        button { border: none; padding: 16px; border-radius: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px; }
+        button { border: none; padding: 14px; border-radius: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-blue { background: #4a90e2; color: white; }
         .btn-green { background: #2ecc71; color: white; }
         .btn-red { background: #e74c3c; color: white; }
-        .btn-light-red { background: #f08080; color: white; }
         .btn-orange { background: #f39c12; color: white; }
         .btn-gray { background: #e0e0e0; color: #666; }
-        .btn-round { border-radius: 50%; width: 60px; height: 60px; font-size: 24px; margin: 0 auto 15px auto; }
         button:active { transform: scale(0.96); }
 
         .search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; }
@@ -103,6 +98,7 @@
 <main>
     <section id="study-view" class="view-section active">
         <div class="config-bar">
+            <label><input type="checkbox" id="study-zh-first" onchange="updateCard()"> 中翻日模式</label>
             <label><input type="checkbox" id="study-hide-kanji" onchange="updateCard()"> 隱藏漢字</label>
         </div>
         
@@ -110,12 +106,12 @@
         
         <div class="card-box">
             <div class="card-inner" id="flashcard" onclick="this.classList.toggle('flipped')">
-                <div class="face">
+                <div class="face" id="face-front">
                     <div id="learned-status" style="position:absolute; top:20px; right:25px; font-size:24px;"></div>
-                    <div id="ruby-display"></div>
+                    <div id="display-front" class="word-text"></div>
                 </div>
-                <div class="face face-back">
-                    <div id="zh-display" style="font-size:32px; color:var(--primary); font-weight:bold; margin-bottom:15px;"></div>
+                <div class="face face-back" id="face-back">
+                    <div id="display-back-main" class="word-text" style="color:var(--primary); margin-bottom:10px;"></div>
                     <div class="example-box">
                         <div id="ex-jp-display" style="font-weight:bold; margin-bottom:5px;"></div>
                         <div id="ex-zh-display" style="color:#888; font-size:14px;"></div>
@@ -128,9 +124,8 @@
             <button class="btn-gray" onclick="shuffleWords()">🔀 隨機抽卡</button>
             <button class="btn-orange" onclick="toggleWeakOnly()" id="weak-btn">🔥 複習錯題</button>
         </div>
-        <div class="grid-2">
-            <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn" style="grid-column: span 2;">練習未會</button>
-        </div>
+        <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn" style="width:100%; margin-bottom:10px;">練習未會</button>
+
         <div class="grid-2">
             <button class="btn-blue" onclick="speak('word')">🔊 讀單字</button>
             <button class="btn-blue" onclick="speak('ex')">💬 聽例句</button>
@@ -153,7 +148,7 @@
             <label><input type="checkbox" id="audio-quiz-check" onchange="loadQuiz()"> 聽力模式</label>
         </div>
         <div style="background:white; padding:20px; border-radius:20px; width:100%; box-sizing:border-box; text-align: center;">
-            <button id="quiz-audio-btn" class="btn-blue btn-round" style="display:none;" onclick="replayQuizAudio()">🔊</button>
+            <button id="quiz-audio-btn" class="btn-blue btn-round" style="display:none; border-radius:50%; width:60px; height:60px; font-size:24px; margin:0 auto 15px auto;" onclick="replayQuizAudio()">🔊</button>
             <div id="quiz-text" class="quiz-q"></div>
             <div id="quiz-options"></div>
             <button id="next-q-btn" class="btn-blue" style="width:100%; margin-top:15px; display:none;" onclick="loadQuiz()">下一題</button>
@@ -164,22 +159,20 @@
         <div class="mgmt-card">
             <div class="mgmt-title">資料管理</div>
             <textarea id="import-area" class="import-area" placeholder='貼上 JSON 格式單字...'></textarea>
-            
             <div class="grid-2">
                 <button class="btn-green" onclick="importJSON()">💾 合併匯入</button>
                 <button class="btn-blue" onclick="exportBackup()">📤 導出備份</button>
             </div>
-            <button class="btn-light-red" style="width:100%;" onclick="clearAllData()">🗑️ 清空所有單字與進度</button>
+            <button class="btn-red" style="width:100%; opacity:0.7;" onclick="clearAllData()">🗑️ 清空資料</button>
         </div>
-
-        <input type="text" class="search-input" id="search-box" placeholder="搜尋單字、中文或假名..." oninput="renderWordList()">
+        <input type="text" class="search-input" id="search-box" placeholder="搜尋..." oninput="renderWordList()">
         <div class="word-list" id="full-list"></div>
     </section>
 
     <section id="stats-view" class="view-section">
         <div style="background:white; padding:25px; border-radius:20px; text-align:center; width:100%; box-sizing:border-box;">
             <h1 id="stat-percent" style="font-size:48px; margin:10px 0; color:var(--success);">0%</h1>
-            <p style="color:#666;">掌握進度總覽</p>
+            <p style="color:#666;">掌握進度</p>
             <div id="stat-count" style="font-weight:bold;">0 / 0</div>
         </div>
         <div style="background:white; padding:20px; border-radius:20px; margin-top:20px; width:100%; box-sizing:border-box;">
@@ -197,11 +190,10 @@
 </nav>
 
 <script>
-    // --- 初始資料 ---
+    // --- 資料初始化 ---
     const defaultData = [
         {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は學生です。(我是學生。)"},
-        {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは學生です。(陳先生是學生。)"},
-        {"kana": "にほん", "kanji": "日本", "chinese": "日本", "example": "日本へ行きます。(去日本。)"}
+        {"kana": "がくせい", "kanji": "學生", "chinese": "學生", "example": "陳さんは學生です。(陳先生是學生。)"}
     ];
 
     let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || [...defaultData];
@@ -225,29 +217,37 @@
         if(tabId === 'quiz') loadQuiz();
     }
 
-    // --- 學習模式核心邏輯 ---
+    // --- 核心：卡片更新邏輯 ---
     function updateCard() {
-        const rubyBox = document.getElementById('ruby-display');
+        const frontBox = document.getElementById('display-front');
+        const backBox = document.getElementById('display-back-main');
+        const zhFirst = document.getElementById('study-zh-first').checked;
         const hideKanji = document.getElementById('study-hide-kanji').checked;
         
         if(currentPool.length === 0) {
-            rubyBox.innerHTML = filterWeak ? "恭喜！暫無答錯的單字" : "目前無單字";
+            frontBox.innerHTML = "暫無單字";
             return;
         }
         
         const item = currentPool[idx];
-        
-        // 判斷是否隱藏漢字
-        if (hideKanji) {
-            rubyBox.innerHTML = `<span style="font-size: 48px;">${item.kana}</span>`;
+        const jpContent = (hideKanji || !item.kanji) ? item.kana : `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>`;
+
+        if (zhFirst) {
+            // 中翻日模式
+            frontBox.innerText = item.chinese;
+            backBox.innerHTML = jpContent;
         } else {
-            rubyBox.innerHTML = item.kanji ? `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>` : `<span style="font-size: 48px;">${item.kana}</span>`;
+            // 日翻中模式
+            frontBox.innerHTML = jpContent;
+            backBox.innerText = item.chinese;
         }
 
-        document.getElementById('zh-display').innerText = item.chinese;
+        // 例句處理
         const parts = item.example.split('(');
         document.getElementById('ex-jp-display').innerText = parts[0].trim();
         document.getElementById('ex-zh-display').innerText = parts[1] ? parts[1].replace(')', '') : '';
+        
+        // 標記處理
         document.getElementById('learned-status').innerText = learnedMap[item.kana] ? '✅' : (errorStats[item.kana] ? '🔥' : '');
         document.getElementById('flashcard').classList.remove('flipped');
         document.getElementById('card-counter').innerText = `${idx + 1} / ${currentPool.length}`;
@@ -265,15 +265,13 @@
         if(status) setTimeout(() => moveCard(1), 400);
     }
 
-    function shuffleWords() {
-        currentPool.sort(() => Math.random() - 0.5);
-        idx = 0; updateCard();
-    }
+    function shuffleWords() { currentPool.sort(() => Math.random() - 0.5); idx = 0; updateCard(); }
 
     function toggleUnlearnedOnly() {
         filterUnlearned = !filterUnlearned;
         filterWeak = false;
-        document.getElementById('filter-btn').classList.toggle('btn-blue', filterUnlearned);
+        document.getElementById('filter-btn').style.background = filterUnlearned ? "#4a90e2" : "#e0e0e0";
+        document.getElementById('filter-btn').style.color = filterUnlearned ? "#fff" : "#666";
         document.getElementById('weak-btn').classList.remove('btn-red');
         currentPool = filterUnlearned ? allWords.filter(w => !learnedMap[w.kana]) : [...allWords];
         idx = 0; updateCard();
@@ -282,29 +280,27 @@
     function toggleWeakOnly() {
         filterWeak = !filterWeak;
         filterUnlearned = false;
-        const btn = document.getElementById('weak-btn');
-        btn.classList.toggle('btn-red', filterWeak);
-        document.getElementById('filter-btn').classList.remove('btn-blue');
+        document.getElementById('weak-btn').classList.toggle('btn-red', filterWeak);
+        document.getElementById('filter-btn').style.background = "#e0e0e0";
         currentPool = filterWeak ? allWords.filter(w => errorStats[w.kana] > 0) : [...allWords];
         idx = 0; updateCard();
     }
 
-    // --- 測驗模式 ---
+    // --- 測驗、語音辨識、資料管理 (邏輯同前) ---
     function loadQuiz() {
-        if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足(至少需4個)"; return; }
+        if(allWords.length < 4) { document.getElementById('quiz-text').innerText = "單字不足"; return; }
         const isAudio = document.getElementById('audio-quiz-check').checked;
         const isHide = document.getElementById('quiz-hide-kanji-check').checked;
-        const audioBtn = document.getElementById('quiz-audio-btn');
         const nextBtn = document.getElementById('next-q-btn');
         nextBtn.style.display = "none";
         quizTarget = allWords[Math.floor(Math.random() * allWords.length)];
 
         if(isAudio) {
-            audioBtn.style.display = "flex";
-            document.getElementById('quiz-text').innerText = "請聽音辨義";
+            document.getElementById('quiz-audio-btn').style.display = "block";
+            document.getElementById('quiz-text').innerText = "聽音辨義";
             replayQuizAudio();
         } else {
-            audioBtn.style.display = "none";
+            document.getElementById('quiz-audio-btn').style.display = "none";
             document.getElementById('quiz-text').innerText = (quizTarget.kanji && !isHide) ? quizTarget.kanji : quizTarget.kana;
         }
 
@@ -321,15 +317,17 @@
             btn.className = "option-btn";
             btn.innerText = opt;
             btn.onclick = () => {
-                document.querySelectorAll('.option-btn').forEach(b => b.onclick = null);
                 if(opt === quizTarget.chinese) btn.classList.add('correct');
                 else {
                     btn.classList.add('wrong');
                     errorStats[quizTarget.kana] = (errorStats[quizTarget.kana] || 0) + 1;
-                    learnedMap[quizTarget.kana] = false; 
+                    learnedMap[quizTarget.kana] = false;
                     saveAll();
-                    document.querySelectorAll('.option-btn').forEach(b => { if(b.innerText === quizTarget.chinese) b.classList.add('correct'); });
                 }
+                document.querySelectorAll('.option-btn').forEach(b => {
+                    b.onclick = null;
+                    if(b.innerText === quizTarget.chinese) b.classList.add('correct');
+                });
                 nextBtn.style.display = "block";
             };
             optDiv.appendChild(btn);
@@ -337,29 +335,24 @@
     }
 
     function replayQuizAudio() {
-        if(!quizTarget) return;
         window.speechSynthesis.cancel();
         const ut = new SpeechSynthesisUtterance(quizTarget.kanji || quizTarget.kana);
         ut.lang = 'ja-JP'; ut.rate = 0.8;
         window.speechSynthesis.speak(ut);
     }
 
-    // --- 語音辨識優化 ---
     function startRecog() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if(!SpeechRecognition) return alert("不支援語音辨識");
         const rec = new SpeechRecognition();
         rec.lang = 'ja-JP';
         const bar = document.getElementById('voice-info');
-        
-        rec.onstart = () => { bar.className = "listening"; bar.innerText = "🎤 正在聆聽，請說出日文..."; };
-        
+        rec.onstart = () => { bar.className = "listening"; bar.innerText = "🎤 正在聆聽日文..."; };
         rec.onresult = (e) => {
             let res = e.results[0][0].transcript.replace(/[。？！\s\.,\?!]/g, "");
             const item = currentPool[idx];
             const targetKanji = item.kanji ? item.kanji.replace(/[。？！\s\.,\?!]/g, "") : "";
             const targetKana = item.kana.replace(/[。？！\s\.,\?!]/g, "");
-
             if(res === targetKanji || res === targetKana || res.includes(targetKana) || targetKana.includes(res)) {
                 bar.innerText = "✅ 正確！(" + res + ")";
                 bar.style.backgroundColor = "#d4edda"; bar.style.color = "#155724";
@@ -369,82 +362,8 @@
                 bar.style.backgroundColor = "#f8d7da"; bar.style.color = "#721c24";
             }
         };
-        
-        rec.onerror = (e) => { bar.innerText = "⚠️ 辨識出錯：" + e.error; };
-        rec.onend = () => { 
-            setTimeout(() => { 
-                bar.className = ""; bar.style.backgroundColor = ""; bar.style.color = ""; 
-            }, 2500); 
-        };
+        rec.onend = () => { setTimeout(() => { bar.className = ""; bar.style.backgroundColor = ""; bar.style.color = ""; }, 2500); };
         rec.start();
-    }
-
-    // --- 資料與統計 ---
-    function importJSON() {
-        const area = document.getElementById('import-area');
-        try {
-            const newData = JSON.parse(area.value);
-            if(Array.isArray(newData)) {
-                let addedCount = 0;
-                const existingKanas = new Set(allWords.map(w => w.kana));
-                newData.forEach(item => {
-                    if (item.kana && !existingKanas.has(item.kana)) {
-                        allWords.push(item);
-                        addedCount++;
-                    }
-                });
-                saveAll();
-                alert(`合併完成！新增了 ${addedCount} 個單字。`);
-                area.value = ""; location.reload();
-            } else { alert("格式錯誤：必須是 JSON 陣列"); }
-        } catch(e) { alert("JSON 格式解析失敗"); }
-    }
-
-    function exportBackup() {
-        document.getElementById('import-area').value = JSON.stringify(allWords, null, 2);
-        alert("已導出備份到文字框！");
-    }
-
-    function clearAllData() {
-        if(confirm("確定要清空嗎？學習紀錄也會不見喔！")) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
-
-    function renderWordList() {
-        const box = document.getElementById('full-list');
-        const query = document.getElementById('search-box').value.toLowerCase();
-        box.innerHTML = "";
-        allWords.filter(w => w.kana.includes(query) || w.chinese.includes(query) || (w.kanji && w.kanji.includes(query)))
-                .forEach(w => {
-            const item = document.createElement('div');
-            item.className = "word-item";
-            const tag = errorStats[w.kana] ? `<span style="color:var(--danger)"> (🔥x${errorStats[w.kana]})</span>` : "";
-            item.innerHTML = `<div><b>${w.kanji || w.kana}${tag}</b><br><small>${w.chinese}</small></div>
-                              <button class="btn-gray" onclick="toggleWordStat('${w.kana}')" style="padding:5px 10px; font-size:12px;">${learnedMap[w.kana]?'已會':'未會'}</button>`;
-            box.appendChild(item);
-        });
-    }
-
-    function toggleWordStat(k) { learnedMap[k] = !learnedMap[k]; saveAll(); renderWordList(); }
-
-    function renderStats() {
-        const learnedCount = Object.values(learnedMap).filter(v => v).length;
-        const total = allWords.length;
-        const percent = Math.round((learnedCount / total) * 100) || 0;
-        document.getElementById('stat-percent').innerText = percent + "%";
-        document.getElementById('stat-count').innerText = `${learnedCount} / ${total}`;
-        const weakOnes = Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        const weakBox = document.getElementById('weak-list');
-        weakBox.innerHTML = weakOnes.length ? "" : "尚無錯題紀錄";
-        weakOnes.forEach(([k, c]) => {
-            const wordObj = allWords.find(w => w.kana === k) || {kanji: k};
-            const div = document.createElement('div');
-            div.style = "padding:10px; border-bottom:1px solid #eee; font-size:14px;";
-            div.innerHTML = `<b>${wordObj.kanji || k}</b> <span style="color:var(--danger); float:right;">錯 ${c} 次</span>`;
-            weakBox.appendChild(div);
-        });
     }
 
     function saveAll() {
@@ -466,6 +385,56 @@
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'ja-JP'; ut.rate = 0.8;
         window.speechSynthesis.speak(ut);
+    }
+
+    function importJSON() {
+        const area = document.getElementById('import-area');
+        try {
+            const newData = JSON.parse(area.value);
+            if(Array.isArray(newData)) {
+                const existingKanas = new Set(allWords.map(w => w.kana));
+                newData.forEach(item => { if (item.kana && !existingKanas.has(item.kana)) allWords.push(item); });
+                saveAll(); alert("合併完成！"); area.value = ""; location.reload();
+            }
+        } catch(e) { alert("格式錯誤"); }
+    }
+
+    function exportBackup() {
+        document.getElementById('import-area').value = JSON.stringify(allWords, null, 2);
+        alert("已導出至文字框");
+    }
+
+    function clearAllData() { if(confirm("確定清空？")) { localStorage.clear(); location.reload(); } }
+
+    function renderWordList() {
+        const box = document.getElementById('full-list');
+        const query = document.getElementById('search-box').value.toLowerCase();
+        box.innerHTML = "";
+        allWords.filter(w => w.kana.includes(query) || w.chinese.includes(query) || (w.kanji && w.kanji.includes(query))).forEach(w => {
+            const item = document.createElement('div');
+            item.className = "word-item";
+            item.innerHTML = `<div><b>${w.kanji || w.kana}</b>${errorStats[w.kana]?`<span style="color:red"> (🔥${errorStats[w.kana]})</span>`:""}<br><small>${w.chinese}</small></div>
+                              <button class="btn-gray" onclick="toggleWordStat('${w.kana}')" style="padding:5px 10px; font-size:12px;">${learnedMap[w.kana]?'已會':'未會'}</button>`;
+            box.appendChild(item);
+        });
+    }
+
+    function toggleWordStat(k) { learnedMap[k] = !learnedMap[k]; saveAll(); renderWordList(); }
+
+    function renderStats() {
+        const learnedCount = Object.values(learnedMap).filter(v => v).length;
+        document.getElementById('stat-percent').innerText = Math.round((learnedCount / allWords.length) * 100) + "%";
+        document.getElementById('stat-count').innerText = `${learnedCount} / ${allWords.length}`;
+        const weakOnes = Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        const weakBox = document.getElementById('weak-list');
+        weakBox.innerHTML = weakOnes.length ? "" : "尚無紀錄";
+        weakOnes.forEach(([k, c]) => {
+            const wordObj = allWords.find(w => w.kana === k) || {kanji: k};
+            const div = document.createElement('div');
+            div.style = "padding:10px; border-bottom:1px solid #eee; font-size:14px;";
+            div.innerHTML = `<b>${wordObj.kanji || k}</b> <span style="color:var(--danger); float:right;">錯 ${c} 次</span>`;
+            weakBox.appendChild(div);
+        });
     }
 
     updateCard();
