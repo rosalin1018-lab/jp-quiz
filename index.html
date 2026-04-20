@@ -47,9 +47,9 @@
         .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: var(--card-white); border-radius: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 25px; box-sizing: border-box; }
         .face-back { transform: rotateY(180deg); border: 2px solid var(--primary); }
 
-        .word-text { font-size: 48px; font-weight: bold; text-align: center; line-height: 1.2; }
-        ruby { font-size: 48px; font-weight: bold; text-align: center; }
-        rt { font-size: 18px; color: #888; letter-spacing: 2px; }
+        .word-text { font-size: 44px; font-weight: bold; text-align: center; line-height: 1.2; }
+        ruby { font-size: 44px; font-weight: bold; text-align: center; }
+        rt { font-size: 16px; color: #888; letter-spacing: 2px; }
 
         .example-box { background: #f8f9fa; padding: 15px; border-radius: 15px; width: 100%; border-left: 4px solid var(--primary); margin-top: 15px; }
 
@@ -67,10 +67,6 @@
         .btn-purple { background: var(--purple); color: white; }
         .btn-gray { background: #e0e0e0; color: #666; }
         button:active { transform: scale(0.96); }
-
-        .search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; }
-        .word-list { width: 100%; background: white; border-radius: 15px; overflow: hidden; }
-        .word-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; }
 
         nav { height: 65px; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
         .tab { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 12px; color: #999; cursor: pointer; font-weight: bold; }
@@ -98,7 +94,7 @@
         <div class="card-box">
             <div class="card-inner" id="flashcard" onclick="this.classList.toggle('flipped')">
                 <div class="face" id="face-front">
-                    <div id="srs-status" style="position:absolute; top:20px; left:20px; font-size:12px; color:#999; background:#f0f0f0; padding:2px 8px; border-radius:10px;"></div>
+                    <div id="srs-badge" style="position:absolute; top:20px; left:20px; font-size:12px; background:#f0f0f0; padding:2px 8px; border-radius:10px; color:#999;"></div>
                     <div id="learned-status" style="position:absolute; top:15px; right:20px; font-size:24px;"></div>
                     <div id="display-front" class="word-text"></div>
                 </div>
@@ -116,7 +112,10 @@
             <button class="btn-purple" onclick="toggleSRSMode()" id="srs-btn">⏳ 遺忘曲線</button>
             <button class="btn-orange" onclick="toggleWeakOnly()" id="weak-btn">🔥 複習錯題</button>
         </div>
-        <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn" style="width:100%; margin-bottom:10px;">練習未會</button>
+        <div class="grid-2">
+            <button class="btn-gray" onclick="shuffleWords()">🔀 隨機順序</button>
+            <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn">練習未會</button>
+        </div>
 
         <div class="grid-2">
             <button class="btn-blue" onclick="speak('word')">🔊 讀單字</button>
@@ -124,8 +123,8 @@
             <button class="btn-gray" style="grid-column: span 2; background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
         </div>
         <div class="grid-2">
-            <button class="btn-red" onclick="handleSRSReview(false)">❌ 還不熟</button>
-            <button class="btn-green" onclick="handleSRSReview(true)">✅ 會了</button>
+            <button class="btn-red" onclick="handleSRSMark(false)">❌ 還不熟</button>
+            <button class="btn-green" onclick="handleSRSMark(true)">✅ 會了</button>
         </div>
         <div style="display:flex; gap:10px; width:100%;">
             <button class="btn-gray" style="flex:1" onclick="moveCard(-1)">上一個</button>
@@ -145,9 +144,9 @@
     </section>
 
     <section id="list-view" class="view-section">
-        <div class="mgmt-card" style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px;">
-            <textarea id="import-area" class="import-area" style="width:100%; height:80px; border:1px solid #ddd; border-radius:10px; padding:10px;" placeholder='貼上 JSON...'></textarea>
-            <div class="grid-2" style="margin-top:10px;"><button class="btn-green" onclick="importJSON()">💾 合併匯入</button><button class="btn-blue" onclick="exportBackup()">📤 導出備份</button></div>
+        <div class="mgmt-card" style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+            <textarea id="import-area" style="width:100%; height:80px; border-radius:10px; border:1px solid #ddd; padding:10px;" placeholder='貼上 JSON...'></textarea>
+            <div class="grid-2" style="margin-top:10px;"><button class="btn-green" onclick="importJSON()">💾 合併匯入</button><button class="btn-blue" onclick="exportBackup()">📤 導出</button></div>
         </div>
         <input type="text" class="search-input" id="search-box" placeholder="搜尋..." oninput="renderWordList()">
         <div class="word-list" id="full-list"></div>
@@ -156,7 +155,7 @@
     <section id="stats-view" class="view-section">
         <div style="background:white; padding:25px; border-radius:20px; text-align:center; width:100%;">
             <h1 id="stat-percent" style="font-size:48px; margin:10px 0; color:var(--success);">0%</h1>
-            <p>記憶掌握度</p><div id="stat-count" style="font-weight:bold;">0 / 0</div>
+            <p>掌握進度</p><div id="stat-count" style="font-weight:bold;">0 / 0</div>
         </div>
         <div id="weak-list" style="margin-top:20px; width:100%;"></div>
     </section>
@@ -170,11 +169,8 @@
 </nav>
 
 <script>
-    // --- 資料初始化 ---
-    let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || [
-        {"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は學生です。(我是學生。)"}
-    ];
-    // SRS 專用數據：{ kana: { nextReview: timestamp, interval: days, ease: factor } }
+    // --- 核心資料 ---
+    let allWords = JSON.parse(localStorage.getItem('jp_master_data')) || [{"kana": "わたし", "kanji": "私", "chinese": "我", "example": "私は學生です。(我是學生。)"}];
     let srsData = JSON.parse(localStorage.getItem('jp_srs_data')) || {};
     let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
 
@@ -189,70 +185,86 @@
         updateProgressBar();
     }
 
-    // --- 遺忘曲線核心邏輯 (SM-2) ---
-    function handleSRSReview(isCorrect) {
+    // --- 遺忘曲線核心 (SM-2) ---
+    function handleSRSMark(isCorrect) {
         if(currentPool.length === 0) return;
         const item = currentPool[idx];
         const now = Date.now();
-        
-        if (!srsData[item.kana]) {
-            srsData[item.kana] = { nextReview: now, interval: 0, ease: 2.5 };
-        }
-        
+        if (!srsData[item.kana]) srsData[item.kana] = { interval: 0, ease: 2.5, nextReview: now };
         let data = srsData[item.kana];
 
         if (isCorrect) {
-            // 計算下次間隔
             if (data.interval === 0) data.interval = 1;
             else if (data.interval === 1) data.interval = 3;
             else data.interval = Math.round(data.interval * data.ease);
-            
             data.nextReview = now + (data.interval * 24 * 60 * 60 * 1000);
-            data.ease = Math.max(1.3, data.ease + 0.1);
         } else {
-            // 重置間隔
             data.interval = 0;
             data.nextReview = now;
-            data.ease = Math.max(1.3, data.ease - 0.2);
             errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
         }
-
         saveAll();
         updateCard();
         if(isCorrect) setTimeout(() => moveCard(1), 400);
     }
 
+    // --- 隨機功能修正 ---
+    function shuffleWords() {
+        if(currentPool.length === 0) return;
+        currentPool.sort(() => Math.random() - 0.5);
+        idx = 0; 
+        updateCard();
+    }
+
+    // --- 模式切換邏輯 ---
     function toggleSRSMode() {
         filterSRS = !filterSRS;
         filterUnlearned = false; filterWeak = false;
-        const btn = document.getElementById('srs-btn');
-        btn.classList.toggle('btn-purple', filterSRS);
+        resetFilterUI();
+        document.getElementById('srs-btn').classList.toggle('btn-purple', filterSRS);
+        document.getElementById('srs-btn').classList.toggle('btn-blue', !filterSRS);
         
         if (filterSRS) {
             const now = Date.now();
-            currentPool = allWords.filter(w => {
-                const data = srsData[w.kana];
-                return !data || data.nextReview <= now;
-            });
-            // 按緊急程度排序 (過期最久的排前面)
+            currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].nextReview <= now);
             currentPool.sort((a,b) => (srsData[a.kana]?.nextReview || 0) - (srsData[b.kana]?.nextReview || 0));
-        } else {
-            currentPool = [...allWords];
-        }
+        } else { currentPool = [...allWords]; }
         idx = 0; updateCard();
     }
 
-    // --- 介面渲染與操作 ---
+    function toggleUnlearnedOnly() {
+        filterUnlearned = !filterUnlearned; filterWeak = false; filterSRS = false;
+        resetFilterUI();
+        document.getElementById('filter-btn').classList.toggle('btn-blue', filterUnlearned);
+        currentPool = filterUnlearned ? allWords.filter(w => !srsData[w.kana] || srsData[w.kana].interval === 0) : [...allWords];
+        idx = 0; updateCard();
+    }
+
+    function toggleWeakOnly() {
+        filterWeak = !filterWeak; filterUnlearned = false; filterSRS = false;
+        resetFilterUI();
+        document.getElementById('weak-btn').classList.toggle('btn-red', filterWeak);
+        currentPool = filterWeak ? allWords.filter(w => errorStats[w.kana] > 0) : [...allWords];
+        idx = 0; updateCard();
+    }
+
+    function resetFilterUI() {
+        document.getElementById('srs-btn').classList.add('btn-purple');
+        document.getElementById('weak-btn').classList.remove('btn-red');
+        document.getElementById('filter-btn').classList.remove('btn-blue');
+    }
+
+    // --- 介面渲染 ---
     function updateCard() {
         const frontBox = document.getElementById('display-front');
         const backBox = document.getElementById('display-back-main');
-        const srsStatus = document.getElementById('srs-status');
         const zhFirst = document.getElementById('study-zh-first').checked;
         const hideKanji = document.getElementById('study-hide-kanji').checked;
+        const srsBadge = document.getElementById('srs-badge');
         
         if(currentPool.length === 0) {
-            frontBox.innerHTML = filterSRS ? "太棒了！<br>目前沒有到期的複習單字" : "暫無單字";
-            srsStatus.innerText = "";
+            frontBox.innerHTML = "目前無符合單字";
+            srsBadge.innerText = "";
             return;
         }
         
@@ -263,7 +275,7 @@
         else { frontBox.innerHTML = jpContent; backBox.innerText = item.chinese; }
 
         const data = srsData[item.kana];
-        srsStatus.innerText = data ? (data.interval === 0 ? "需加強" : `複習週期: ${data.interval}天`) : "新單字";
+        srsBadge.innerText = data ? (data.interval > 0 ? `週期: ${data.interval}天` : "需強化") : "新單字";
         document.getElementById('learned-status').innerText = (data && data.interval > 0) ? '✅' : (errorStats[item.kana] ? '🔥' : '');
         
         const parts = item.example.split('(');
@@ -277,25 +289,11 @@
 
     function moveCard(d) { if(currentPool.length > 0) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); } }
 
-    function toggleUnlearnedOnly() {
-        filterUnlearned = !filterUnlearned; filterWeak = false; filterSRS = false;
-        currentPool = filterUnlearned ? allWords.filter(w => !srsData[w.kana] || srsData[w.kana].interval === 0) : [...allWords];
-        idx = 0; updateCard();
-    }
-
-    function toggleWeakOnly() {
-        filterWeak = !filterWeak; filterUnlearned = false; filterSRS = false;
-        currentPool = filterWeak ? allWords.filter(w => errorStats[w.kana] > 0) : [...allWords];
-        idx = 0; updateCard();
-    }
-
-    // --- 其他功能 (語音、測驗、匯入等保持原有邏輯) ---
     function changeTab(tabId, el) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId + '-view').classList.add('active');
         el.classList.add('active');
-        if(tabId === 'stats') renderStats();
     }
 
     function speak(type) {
@@ -315,27 +313,12 @@
             let res = e.results[0][0].transcript.replace(/[。？！\s\.,\?!]/g, "");
             const item = currentPool[idx];
             if(res === item.kana || res === item.kanji || res.includes(item.kana)) {
-                bar.innerText = "✅ 正確！(" + res + ")";
-                handleSRSReview(true);
+                bar.innerText = "✅ 正確！";
+                handleSRSMark(true);
             } else { bar.innerText = "❌ 聽到的是: " + res; }
         };
         rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2500); };
         rec.start();
-    }
-
-    function importJSON() {
-        try {
-            const newData = JSON.parse(document.getElementById('import-area').value);
-            const existing = new Set(allWords.map(w => w.kana));
-            newData.forEach(i => { if(!existing.has(i.kana)) allWords.push(i); });
-            saveAll(); location.reload();
-        } catch(e) { alert("格式錯誤"); }
-    }
-
-    function renderStats() {
-        const mastered = Object.values(srsData).filter(d => d.interval >= 5).length;
-        document.getElementById('stat-percent').innerText = Math.round((mastered / allWords.length) * 100) + "%";
-        document.getElementById('stat-count').innerText = `${mastered} / ${allWords.length}`;
     }
 
     function updateProgressBar() {
