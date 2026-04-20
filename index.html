@@ -57,6 +57,14 @@
         .config-bar { display: flex; gap: 10px; margin-bottom: 12px; width: 100%; font-size: 12px; color: #666; justify-content: center; flex-wrap: wrap; }
         .config-bar label { display: flex; align-items: center; gap: 4px; background: #fff; padding: 5px 10px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
+        /* 測驗 UI */
+        .quiz-card { background: white; padding: 20px; border-radius: 20px; width: 100%; box-sizing: border-box; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .quiz-config { display: flex; justify-content: space-around; background: #fff; padding: 10px; border-radius: 12px; margin-bottom: 15px; width: 100%; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .quiz-q { font-size: 28px; font-weight: bold; color: var(--primary); margin-bottom: 25px; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .option-btn { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 15px; margin-bottom: 10px; cursor: pointer; text-align: left; transition: 0.2s; font-size: 16px; width: 100%; font-weight: bold; }
+        .option-btn.correct { background: #d4edda !important; border-color: var(--success) !important; color: #155724 !important; }
+        .option-btn.wrong { background: #f8d7da !important; border-color: var(--danger) !important; color: #721c24 !important; }
+
         /* 按鈕系統 */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px; }
         button { border: none; padding: 14px; border-radius: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -88,17 +96,15 @@
             <label><input type="checkbox" id="study-zh-first" onchange="updateCard()"> 中翻日</label>
             <label><input type="checkbox" id="study-hide-kanji" onchange="updateCard()"> 隱藏漢字</label>
         </div>
-        
         <div id="voice-info">正在聆聽中...</div>
-        
         <div class="card-box">
             <div class="card-inner" id="flashcard" onclick="this.classList.toggle('flipped')">
-                <div class="face" id="face-front">
+                <div class="face">
                     <div id="srs-badge" style="position:absolute; top:20px; left:20px; font-size:12px; background:#f0f0f0; padding:2px 8px; border-radius:10px; color:#999;"></div>
                     <div id="learned-status" style="position:absolute; top:15px; right:20px; font-size:24px;"></div>
                     <div id="display-front" class="word-text"></div>
                 </div>
-                <div class="face face-back" id="face-back">
+                <div class="face face-back">
                     <div id="display-back-main" class="word-text" style="color:var(--primary); margin-bottom:10px;"></div>
                     <div class="example-box">
                         <div id="ex-jp-display" style="font-weight:bold; margin-bottom:5px;"></div>
@@ -107,7 +113,6 @@
                 </div>
             </div>
         </div>
-
         <div class="grid-2">
             <button class="btn-purple" onclick="toggleSRSMode()" id="srs-btn">⏳ 遺忘曲線</button>
             <button class="btn-orange" onclick="toggleWeakOnly()" id="weak-btn">🔥 複習錯題</button>
@@ -116,7 +121,6 @@
             <button class="btn-gray" onclick="shuffleWords()">🔀 隨機順序</button>
             <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn">練習未會</button>
         </div>
-
         <div class="grid-2">
             <button class="btn-blue" onclick="speak('word')">🔊 讀單字</button>
             <button class="btn-blue" onclick="speak('ex')">💬 聽例句</button>
@@ -134,19 +138,23 @@
     </section>
 
     <section id="quiz-view" class="view-section">
-        <div class="quiz-config"><label><input type="checkbox" id="quiz-hide-kanji-check"> 隱藏漢字</label><label><input type="checkbox" id="audio-quiz-check" onchange="loadQuiz()"> 聽力模式</label></div>
-        <div style="background:white; padding:20px; border-radius:20px; width:100%; box-sizing:border-box; text-align: center;">
-            <button id="quiz-audio-btn" class="btn-blue btn-round" style="display:none; border-radius:50%; width:60px; height:60px; font-size:24px; margin:0 auto 15px auto;" onclick="replayQuizAudio()">🔊</button>
-            <div id="quiz-text" class="quiz-q"></div>
+        <div class="quiz-config">
+            <label><input type="checkbox" id="quiz-hide-kanji-check"> 隱藏漢字</label>
+            <label><input type="checkbox" id="audio-quiz-check" onchange="loadQuiz()"> 聽力模式</label>
+        </div>
+        <div class="quiz-card">
+            <button id="quiz-audio-btn" class="btn-blue" style="display:none; border-radius:50%; width:60px; height:60px; font-size:24px; margin:0 auto 15px auto;" onclick="replayQuizAudio()">🔊</button>
+            <div id="quiz-text" class="quiz-q">載入中...</div>
             <div id="quiz-options"></div>
             <button id="next-q-btn" class="btn-blue" style="width:100%; margin-top:15px; display:none;" onclick="loadQuiz()">下一題</button>
         </div>
     </section>
 
     <section id="list-view" class="view-section">
-        <div class="mgmt-card" style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-            <textarea id="import-area" style="width:100%; height:80px; border-radius:10px; border:1px solid #ddd; padding:10px;" placeholder='貼上 JSON...'></textarea>
+        <div style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+            <textarea id="import-area" style="width:100%; height:80px; border-radius:10px; border:1px solid #ddd; padding:10px;" placeholder="貼上 JSON..."></textarea>
             <div class="grid-2" style="margin-top:10px;"><button class="btn-green" onclick="importJSON()">💾 合併匯入</button><button class="btn-blue" onclick="exportBackup()">📤 導出</button></div>
+            <button class="btn-red" style="width:100%; margin-top:10px; opacity:0.6" onclick="clearAllData()">🗑️ 清空所有資料</button>
         </div>
         <input type="text" class="search-input" id="search-box" placeholder="搜尋..." oninput="renderWordList()">
         <div class="word-list" id="full-list"></div>
@@ -155,7 +163,7 @@
     <section id="stats-view" class="view-section">
         <div style="background:white; padding:25px; border-radius:20px; text-align:center; width:100%;">
             <h1 id="stat-percent" style="font-size:48px; margin:10px 0; color:var(--success);">0%</h1>
-            <p>掌握進度</p><div id="stat-count" style="font-weight:bold;">0 / 0</div>
+            <p>記憶掌握度</p><div id="stat-count" style="font-weight:bold;">0 / 0</div>
         </div>
         <div id="weak-list" style="margin-top:20px; width:100%;"></div>
     </section>
@@ -177,6 +185,7 @@
     let currentPool = [...allWords];
     let idx = 0;
     let filterUnlearned = false, filterWeak = false, filterSRS = false;
+    let quizTarget = null;
 
     function saveAll() {
         localStorage.setItem('jp_master_data', JSON.stringify(allWords));
@@ -185,7 +194,41 @@
         updateProgressBar();
     }
 
-    // --- 遺忘曲線核心 (SM-2) ---
+    // --- 學習模式 ---
+    function updateCard() {
+        const frontBox = document.getElementById('display-front');
+        const backBox = document.getElementById('display-back-main');
+        const zhFirst = document.getElementById('study-zh-first').checked;
+        const hideKanji = document.getElementById('study-hide-kanji').checked;
+        const srsBadge = document.getElementById('srs-badge');
+        
+        if(currentPool.length === 0) {
+            frontBox.innerHTML = "目前無單字";
+            srsBadge.innerText = "";
+            return;
+        }
+        
+        const item = currentPool[idx];
+        const jpContent = (hideKanji || !item.kanji) ? item.kana : `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>`;
+        
+        if (zhFirst) { frontBox.innerText = item.chinese; backBox.innerHTML = jpContent; }
+        else { frontBox.innerHTML = jpContent; backBox.innerText = item.chinese; }
+
+        const data = srsData[item.kana];
+        srsBadge.innerText = data ? (data.interval > 0 ? `週期: ${data.interval}天` : "需強化") : "新單字";
+        document.getElementById('learned-status').innerText = (data && data.interval > 0) ? '✅' : (errorStats[item.kana] ? '🔥' : '');
+        
+        const parts = item.example.split('(');
+        document.getElementById('ex-jp-display').innerText = parts[0].trim();
+        document.getElementById('ex-zh-display').innerText = parts[1] ? parts[1].replace(')', '') : '';
+        
+        document.getElementById('flashcard').classList.remove('flipped');
+        document.getElementById('card-counter').innerText = `${idx + 1} / ${currentPool.length}`;
+        updateProgressBar();
+    }
+
+    function moveCard(d) { if(currentPool.length > 0) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); } }
+
     function handleSRSMark(isCorrect) {
         if(currentPool.length === 0) return;
         const item = currentPool[idx];
@@ -199,31 +242,23 @@
             else data.interval = Math.round(data.interval * data.ease);
             data.nextReview = now + (data.interval * 24 * 60 * 60 * 1000);
         } else {
-            data.interval = 0;
-            data.nextReview = now;
+            data.interval = 0; data.nextReview = now;
             errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
         }
-        saveAll();
-        updateCard();
+        saveAll(); updateCard();
         if(isCorrect) setTimeout(() => moveCard(1), 400);
     }
 
-    // --- 隨機功能修正 ---
     function shuffleWords() {
         if(currentPool.length === 0) return;
         currentPool.sort(() => Math.random() - 0.5);
-        idx = 0; 
-        updateCard();
+        idx = 0; updateCard();
     }
 
-    // --- 模式切換邏輯 ---
     function toggleSRSMode() {
-        filterSRS = !filterSRS;
-        filterUnlearned = false; filterWeak = false;
+        filterSRS = !filterSRS; filterUnlearned = false; filterWeak = false;
         resetFilterUI();
         document.getElementById('srs-btn').classList.toggle('btn-purple', filterSRS);
-        document.getElementById('srs-btn').classList.toggle('btn-blue', !filterSRS);
-        
         if (filterSRS) {
             const now = Date.now();
             currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].nextReview <= now);
@@ -254,46 +289,85 @@
         document.getElementById('filter-btn').classList.remove('btn-blue');
     }
 
-    // --- 介面渲染 ---
-    function updateCard() {
-        const frontBox = document.getElementById('display-front');
-        const backBox = document.getElementById('display-back-main');
-        const zhFirst = document.getElementById('study-zh-first').checked;
-        const hideKanji = document.getElementById('study-hide-kanji').checked;
-        const srsBadge = document.getElementById('srs-badge');
-        
-        if(currentPool.length === 0) {
-            frontBox.innerHTML = "目前無符合單字";
-            srsBadge.innerText = "";
-            return;
-        }
-        
-        const item = currentPool[idx];
-        const jpContent = (hideKanji || !item.kanji) ? item.kana : `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>`;
-        
-        if (zhFirst) { frontBox.innerText = item.chinese; backBox.innerHTML = jpContent; }
-        else { frontBox.innerHTML = jpContent; backBox.innerText = item.chinese; }
+    // --- 測驗模式 (修復版) ---
+    function loadQuiz() {
+        const qText = document.getElementById('quiz-text');
+        const qOptions = document.getElementById('quiz-options');
+        const nextBtn = document.getElementById('next-q-btn');
+        const audioBtn = document.getElementById('quiz-audio-btn');
 
-        const data = srsData[item.kana];
-        srsBadge.innerText = data ? (data.interval > 0 ? `週期: ${data.interval}天` : "需強化") : "新單字";
-        document.getElementById('learned-status').innerText = (data && data.interval > 0) ? '✅' : (errorStats[item.kana] ? '🔥' : '');
+        if(allWords.length < 4) { 
+            qText.innerText = "單字量不足(需至少4個)"; 
+            return; 
+        }
+
+        nextBtn.style.display = "none";
+        const isAudio = document.getElementById('audio-quiz-check').checked;
+        const isHide = document.getElementById('quiz-hide-kanji-check').checked;
         
-        const parts = item.example.split('(');
-        document.getElementById('ex-jp-display').innerText = parts[0].trim();
-        document.getElementById('ex-zh-display').innerText = parts[1] ? parts[1].replace(')', '') : '';
-        
-        document.getElementById('flashcard').classList.remove('flipped');
-        document.getElementById('card-counter').innerText = `${idx + 1} / ${currentPool.length}`;
-        updateProgressBar();
+        // 隨機選題
+        quizTarget = allWords[Math.floor(Math.random() * allWords.length)];
+
+        if(isAudio) {
+            audioBtn.style.display = "block";
+            qText.innerText = "聽音辨義";
+            replayQuizAudio();
+        } else {
+            audioBtn.style.display = "none";
+            qText.innerText = (quizTarget.kanji && !isHide) ? quizTarget.kanji : quizTarget.kana;
+        }
+
+        // 生成選項
+        let options = [quizTarget.chinese];
+        while(options.length < 4) {
+            let rand = allWords[Math.floor(Math.random() * allWords.length)];
+            if(!options.includes(rand.chinese)) options.push(rand.chinese);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        qOptions.innerHTML = "";
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => {
+                const btns = qOptions.querySelectorAll('.option-btn');
+                btns.forEach(b => b.onclick = null); // 停用點擊
+                
+                if(opt === quizTarget.chinese) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('wrong');
+                    // 答錯自動標記為不熟
+                    errorStats[quizTarget.kana] = (errorStats[quizTarget.kana] || 0) + 1;
+                    if(srsData[quizTarget.kana]) srsData[quizTarget.kana].interval = 0;
+                    saveAll();
+                    btns.forEach(b => { if(b.innerText === quizTarget.chinese) b.classList.add('correct'); });
+                }
+                nextBtn.style.display = "block";
+            };
+            qOptions.appendChild(btn);
+        });
     }
 
-    function moveCard(d) { if(currentPool.length > 0) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); } }
+    function replayQuizAudio() {
+        if(!quizTarget) return;
+        window.speechSynthesis.cancel();
+        const ut = new SpeechSynthesisUtterance(quizTarget.kanji || quizTarget.kana);
+        ut.lang = 'ja-JP'; ut.rate = 0.8;
+        window.speechSynthesis.speak(ut);
+    }
 
+    // --- 其他功能 ---
     function changeTab(tabId, el) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId + '-view').classList.add('active');
         el.classList.add('active');
+        document.getElementById('view-title').innerText = el.innerText + '模式';
+        if(tabId === 'quiz') loadQuiz();
+        if(tabId === 'stats') renderStats();
+        if(tabId === 'list') renderWordList();
     }
 
     function speak(type) {
@@ -313,12 +387,65 @@
             let res = e.results[0][0].transcript.replace(/[。？！\s\.,\?!]/g, "");
             const item = currentPool[idx];
             if(res === item.kana || res === item.kanji || res.includes(item.kana)) {
-                bar.innerText = "✅ 正確！";
-                handleSRSMark(true);
+                bar.innerText = "✅ 正確！"; handleSRSMark(true);
             } else { bar.innerText = "❌ 聽到的是: " + res; }
         };
         rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2500); };
         rec.start();
+    }
+
+    function importJSON() {
+        try {
+            const newData = JSON.parse(document.getElementById('import-area').value);
+            const existing = new Set(allWords.map(w => w.kana));
+            newData.forEach(i => { if(!existing.has(i.kana)) allWords.push(i); });
+            saveAll(); location.reload();
+        } catch(e) { alert("格式錯誤"); }
+    }
+
+    function exportBackup() {
+        document.getElementById('import-area').value = JSON.stringify(allWords, null, 2);
+        alert("已導出至文字框");
+    }
+
+    function clearAllData() {
+        if(confirm("確定清空所有資料嗎？")) { localStorage.clear(); location.reload(); }
+    }
+
+    function renderWordList() {
+        const box = document.getElementById('full-list');
+        const query = document.getElementById('search-box').value.toLowerCase();
+        box.innerHTML = "";
+        allWords.filter(w => w.kana.includes(query) || w.chinese.includes(query) || (w.kanji && w.kanji.includes(query))).forEach(w => {
+            const item = document.createElement('div');
+            item.className = "word-item";
+            item.innerHTML = `<div><b>${w.kanji || w.kana}</b>${errorStats[w.kana]?`<span style="color:red"> (🔥${errorStats[w.kana]})</span>`:""}<br><small>${w.chinese}</small></div>
+                              <button class="btn-gray" onclick="toggleWordStat('${w.kana}')" style="padding:5px 10px; font-size:12px;">${srsData[w.kana]?.interval > 0 ? '已會':'未會'}</button>`;
+            box.appendChild(item);
+        });
+    }
+
+    function toggleWordStat(k) { 
+        if(!srsData[k]) srsData[k] = {interval:0, ease:2.5, nextReview:Date.now()};
+        srsData[k].interval = srsData[k].interval > 0 ? 0 : 1; 
+        saveAll(); renderWordList(); 
+    }
+
+    function renderStats() {
+        const total = allWords.length;
+        const mastered = Object.values(srsData).filter(d => d.interval >= 1).length;
+        document.getElementById('stat-percent').innerText = Math.round((mastered / total) * 100) + "%";
+        document.getElementById('stat-count').innerText = `${mastered} / ${total}`;
+        const weakOnes = Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        const weakBox = document.getElementById('weak-list');
+        weakBox.innerHTML = weakOnes.length ? "" : "尚無紀錄";
+        weakOnes.forEach(([k, c]) => {
+            const wordObj = allWords.find(w => w.kana === k) || {kanji: k};
+            const div = document.createElement('div');
+            div.style = "background:white; padding:10px; border-radius:10px; margin-bottom:10px; font-size:14px; box-shadow:0 1px 3px rgba(0,0,0,0.1);";
+            div.innerHTML = `<b>${wordObj.kanji || k}</b> <span style="color:var(--danger); float:right;">錯 ${c} 次</span>`;
+            weakBox.appendChild(div);
+        });
     }
 
     function updateProgressBar() {
