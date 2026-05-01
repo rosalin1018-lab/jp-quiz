@@ -71,7 +71,8 @@
         .btn-blue { background: #4a90e2; color: white; }
         .btn-green { background: #2ecc71; color: white; }
         .btn-red { background: #e74c3c; color: white; }
-        .btn-orange { background: #f39c12; color: white; }
+        .btn-orange { background: #e67e22; color: white; } /* 中文未會專用橘色 */
+        .btn-yellow { background: #f39c12; color: white; } /* 複習錯題 */
         .btn-purple { background: var(--purple); color: white; }
         .btn-gray { background: #e0e0e0; color: #666; }
         button:active { transform: scale(0.96); }
@@ -91,6 +92,7 @@
 <div class="progress-container"><div class="progress-fill" id="main-progress"></div></div>
 
 <main>
+    <!-- 學習分頁 -->
     <section id="study-view" class="view-section active">
         <div class="config-bar">
             <label><input type="checkbox" id="study-zh-first" onchange="updateCard()"> 中翻日</label>
@@ -100,7 +102,7 @@
         <div class="card-box">
             <div class="card-inner" id="flashcard" onclick="this.classList.toggle('flipped')">
                 <div class="face">
-                    <div id="srs-badge" style="position:absolute; top:20px; left:20px; font-size:12px; background:#f0f0f0; padding:2px 8px; border-radius:10px; color:#999;"></div>
+                    <div id="srs-badge" style="position:absolute; top:20px; left:20px; font-size:12px; background:#f0f0f0; padding:4px 8px; border-radius:10px; color:#666;"></div>
                     <div id="learned-status" style="position:absolute; top:15px; right:20px; font-size:24px;"></div>
                     <div id="display-front" class="word-text"></div>
                 </div>
@@ -113,23 +115,29 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 模式過濾區 -->
         <div class="grid-2">
-            <button class="btn-purple" onclick="toggleSRSMode()" id="srs-btn">⏳ 遺忘曲線</button>
-            <button class="btn-orange" onclick="toggleWeakOnly()" id="weak-btn">🔥 複習錯題</button>
+            <button class="btn-gray" onclick="applyFilter('jp')" id="filter-jp-btn">🎯 日文未會</button>
+            <button class="btn-gray" onclick="applyFilter('zh')" id="filter-zh-btn">🎯 中文未會</button>
         </div>
         <div class="grid-2">
             <button class="btn-gray" onclick="shuffleWords()">🔀 隨機順序</button>
-            <button class="btn-gray" onclick="toggleUnlearnedOnly()" id="filter-btn">練習未會</button>
+            <button class="btn-purple" onclick="applyFilter('srs')" id="srs-btn">⏳ 遺忘曲線</button>
         </div>
-        <div class="grid-2">
+
+        <div class="grid-2" style="margin-top: 5px;">
             <button class="btn-blue" onclick="speak('word')">🔊 讀單字</button>
-            <button class="btn-blue" onclick="speak('ex')">💬 聽例句</button>
-            <button class="btn-gray" style="grid-column: span 2; background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
+            <button class="btn-gray" style="background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
         </div>
+        
+        <!-- 記憶雙軌標記區 -->
         <div class="grid-2">
-            <button class="btn-red" onclick="handleSRSMark(false)">❌ 還不熟</button>
-            <button class="btn-green" onclick="handleSRSMark(true)">✅ 會了</button>
+            <button class="btn-red" onclick="handleSRSMark('jp')">❌ 忘記日文</button>
+            <button class="btn-orange" onclick="handleSRSMark('zh')">❌ 忘記中文</button>
         </div>
+        <button class="btn-green" onclick="handleSRSMark('both')" style="width:100%; margin-bottom:10px;">✅ 都記住了</button>
+
         <div style="display:flex; gap:10px; width:100%;">
             <button class="btn-gray" style="flex:1" onclick="moveCard(-1)">上一個</button>
             <button class="btn-gray" style="flex:1" onclick="moveCard(1)">下一個</button>
@@ -137,6 +145,7 @@
         <div id="card-counter" style="margin-top:15px; color:#999; font-size:14px;"></div>
     </section>
 
+    <!-- 測驗分頁 -->
     <section id="quiz-view" class="view-section">
         <div class="quiz-config">
             <label><input type="checkbox" id="quiz-hide-kanji-check"> 隱藏漢字</label>
@@ -150,20 +159,22 @@
         </div>
     </section>
 
+    <!-- 資料管理與清單 -->
     <section id="list-view" class="view-section">
         <div style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
             <textarea id="import-area" style="width:100%; height:80px; border-radius:10px; border:1px solid #ddd; padding:10px;" placeholder="貼上 JSON..."></textarea>
             <div class="grid-2" style="margin-top:10px;"><button class="btn-green" onclick="importJSON()">💾 合併匯入</button><button class="btn-blue" onclick="exportBackup()">📤 導出</button></div>
             <button class="btn-red" style="width:100%; margin-top:10px; opacity:0.6" onclick="clearAllData()">🗑️ 清空所有資料</button>
         </div>
-        <input type="text" class="search-input" id="search-box" placeholder="搜尋..." oninput="renderWordList()">
+        <input type="text" class="search-input" id="search-box" placeholder="搜尋單字..." oninput="renderWordList()">
         <div class="word-list" id="full-list"></div>
     </section>
 
+    <!-- 統計分頁 -->
     <section id="stats-view" class="view-section">
         <div style="background:white; padding:25px; border-radius:20px; text-align:center; width:100%;">
             <h1 id="stat-percent" style="font-size:48px; margin:10px 0; color:var(--success);">0%</h1>
-            <p>記憶掌握度</p><div id="stat-count" style="font-weight:bold;">0 / 0</div>
+            <p>全面掌握度 (中日皆熟練)</p><div id="stat-count" style="font-weight:bold;">0 / 0</div>
         </div>
         <div id="weak-list" style="margin-top:20px; width:100%;"></div>
     </section>
@@ -182,9 +193,20 @@
     let srsData = JSON.parse(localStorage.getItem('jp_srs_data')) || {};
     let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
 
+    // 資料庫自動升級 (將舊的單一 interval 轉換為 jp/zh 雙軌制)
+    for (let key in srsData) {
+        let d = srsData[key];
+        if (d && d.interval !== undefined) {
+            d.jp_interval = d.interval; d.jp_ease = d.ease; d.jp_next = d.nextReview;
+            d.zh_interval = d.interval; d.zh_ease = d.ease; d.zh_next = d.nextReview;
+            delete d.interval; delete d.ease; delete d.nextReview;
+        }
+    }
+    localStorage.setItem('jp_srs_data', JSON.stringify(srsData));
+
     let currentPool = [...allWords];
     let idx = 0;
-    let filterUnlearned = false, filterWeak = false, filterSRS = false;
+    let activeFilter = 'none'; // 'srs', 'jp', 'zh', 'none'
     let quizTarget = null;
 
     function saveAll() {
@@ -194,7 +216,86 @@
         updateProgressBar();
     }
 
-    // --- 學習模式 ---
+    // --- 雙軌 SRS 遺忘曲線演算法 ---
+    function updateSRSNode(data, lang, isCorrect, now) {
+        let interval = data[`${lang}_interval`];
+        let ease = data[`${lang}_ease`];
+        if (isCorrect) {
+            if (interval === 0) interval = 1;
+            else if (interval === 1) interval = 3;
+            else interval = Math.round(interval * ease);
+            ease = Math.max(1.3, ease + 0.1);
+        } else {
+            interval = 0;
+            ease = Math.max(1.3, ease - 0.2);
+        }
+        data[`${lang}_interval`] = interval;
+        data[`${lang}_ease`] = ease;
+        data[`${lang}_next`] = now + (interval * 24 * 60 * 60 * 1000);
+    }
+
+    function handleSRSMark(type) {
+        if(currentPool.length === 0) return;
+        const item = currentPool[idx];
+        const now = Date.now();
+        
+        if (!srsData[item.kana]) {
+            srsData[item.kana] = { jp_interval:0, jp_ease:2.5, jp_next:now, zh_interval:0, zh_ease:2.5, zh_next:now };
+        }
+        let data = srsData[item.kana];
+
+        if (type === 'both') {
+            updateSRSNode(data, 'jp', true, now);
+            updateSRSNode(data, 'zh', true, now);
+        } else if (type === 'jp') {
+            updateSRSNode(data, 'jp', false, now);
+            updateSRSNode(data, 'zh', true, now); // 假設忘記日文代表還記得中文
+            errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
+        } else if (type === 'zh') {
+            updateSRSNode(data, 'jp', true, now); // 假設忘記中文代表還記得日文
+            updateSRSNode(data, 'zh', false, now);
+            errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
+        }
+        
+        saveAll(); updateCard();
+        if(type === 'both') setTimeout(() => moveCard(1), 400); // 只有全對才自動跳下一張
+    }
+
+    // --- 過濾器機制 ---
+    function applyFilter(filterType) {
+        if (activeFilter === filterType) activeFilter = 'none'; // 取消過濾
+        else activeFilter = filterType;
+
+        // UI 樣式重置
+        document.getElementById('srs-btn').className = 'btn-purple';
+        document.getElementById('filter-jp-btn').className = 'btn-gray';
+        document.getElementById('filter-zh-btn').className = 'btn-gray';
+
+        const now = Date.now();
+        if (activeFilter === 'srs') {
+            document.getElementById('srs-btn').classList.add('btn-blue'); // 點亮
+            currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].jp_next <= now || srsData[w.kana].zh_next <= now);
+            currentPool.sort((a,b) => Math.min(srsData[a.kana]?.jp_next||0, srsData[a.kana]?.zh_next||0) - Math.min(srsData[b.kana]?.jp_next||0, srsData[b.kana]?.zh_next||0));
+        } else if (activeFilter === 'jp') {
+            document.getElementById('filter-jp-btn').className = 'btn-blue';
+            currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].jp_interval === 0);
+        } else if (activeFilter === 'zh') {
+            document.getElementById('filter-zh-btn').className = 'btn-blue';
+            currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].zh_interval === 0);
+        } else {
+            currentPool = [...allWords]; // 全顯示
+        }
+        
+        idx = 0; updateCard();
+    }
+
+    function shuffleWords() {
+        if(currentPool.length === 0) return;
+        currentPool.sort(() => Math.random() - 0.5);
+        idx = 0; updateCard();
+    }
+
+    // --- 學習卡片 UI ---
     function updateCard() {
         const frontBox = document.getElementById('display-front');
         const backBox = document.getElementById('display-back-main');
@@ -203,7 +304,7 @@
         const srsBadge = document.getElementById('srs-badge');
         
         if(currentPool.length === 0) {
-            frontBox.innerHTML = "目前無單字";
+            frontBox.innerHTML = "無符合條件的單字";
             srsBadge.innerText = "";
             return;
         }
@@ -215,8 +316,15 @@
         else { frontBox.innerHTML = jpContent; backBox.innerText = item.chinese; }
 
         const data = srsData[item.kana];
-        srsBadge.innerText = data ? (data.interval > 0 ? `週期: ${data.interval}天` : "需強化") : "新單字";
-        document.getElementById('learned-status').innerText = (data && data.interval > 0) ? '✅' : (errorStats[item.kana] ? '🔥' : '');
+        if (data) {
+            let jpStr = data.jp_interval > 0 ? `<span style="color:#2ecc71">日:${data.jp_interval}天</span>` : `<span style="color:#e74c3c">日:未熟</span>`;
+            let zhStr = data.zh_interval > 0 ? `<span style="color:#2ecc71">中:${data.zh_interval}天</span>` : `<span style="color:#e74c3c">中:未熟</span>`;
+            srsBadge.innerHTML = `${jpStr} | ${zhStr}`;
+        } else {
+            srsBadge.innerText = "新單字";
+        }
+        
+        document.getElementById('learned-status').innerText = (data && data.jp_interval > 0 && data.zh_interval > 0) ? '✅' : (errorStats[item.kana] ? '🔥' : '');
         
         const parts = item.example.split('(');
         document.getElementById('ex-jp-display').innerText = parts[0].trim();
@@ -229,95 +337,26 @@
 
     function moveCard(d) { if(currentPool.length > 0) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); } }
 
-    function handleSRSMark(isCorrect) {
-        if(currentPool.length === 0) return;
-        const item = currentPool[idx];
-        const now = Date.now();
-        if (!srsData[item.kana]) srsData[item.kana] = { interval: 0, ease: 2.5, nextReview: now };
-        let data = srsData[item.kana];
-
-        if (isCorrect) {
-            if (data.interval === 0) data.interval = 1;
-            else if (data.interval === 1) data.interval = 3;
-            else data.interval = Math.round(data.interval * data.ease);
-            data.nextReview = now + (data.interval * 24 * 60 * 60 * 1000);
-        } else {
-            data.interval = 0; data.nextReview = now;
-            errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
-        }
-        saveAll(); updateCard();
-        if(isCorrect) setTimeout(() => moveCard(1), 400);
-    }
-
-    function shuffleWords() {
-        if(currentPool.length === 0) return;
-        currentPool.sort(() => Math.random() - 0.5);
-        idx = 0; updateCard();
-    }
-
-    function toggleSRSMode() {
-        filterSRS = !filterSRS; filterUnlearned = false; filterWeak = false;
-        resetFilterUI();
-        document.getElementById('srs-btn').classList.toggle('btn-purple', filterSRS);
-        if (filterSRS) {
-            const now = Date.now();
-            currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].nextReview <= now);
-            currentPool.sort((a,b) => (srsData[a.kana]?.nextReview || 0) - (srsData[b.kana]?.nextReview || 0));
-        } else { currentPool = [...allWords]; }
-        idx = 0; updateCard();
-    }
-
-    function toggleUnlearnedOnly() {
-        filterUnlearned = !filterUnlearned; filterWeak = false; filterSRS = false;
-        resetFilterUI();
-        document.getElementById('filter-btn').classList.toggle('btn-blue', filterUnlearned);
-        currentPool = filterUnlearned ? allWords.filter(w => !srsData[w.kana] || srsData[w.kana].interval === 0) : [...allWords];
-        idx = 0; updateCard();
-    }
-
-    function toggleWeakOnly() {
-        filterWeak = !filterWeak; filterUnlearned = false; filterSRS = false;
-        resetFilterUI();
-        document.getElementById('weak-btn').classList.toggle('btn-red', filterWeak);
-        currentPool = filterWeak ? allWords.filter(w => errorStats[w.kana] > 0) : [...allWords];
-        idx = 0; updateCard();
-    }
-
-    function resetFilterUI() {
-        document.getElementById('srs-btn').classList.add('btn-purple');
-        document.getElementById('weak-btn').classList.remove('btn-red');
-        document.getElementById('filter-btn').classList.remove('btn-blue');
-    }
-
-    // --- 測驗模式 (修復版) ---
+    // --- 測驗模式 (答錯自動扣除日文/中文評分) ---
     function loadQuiz() {
         const qText = document.getElementById('quiz-text');
         const qOptions = document.getElementById('quiz-options');
         const nextBtn = document.getElementById('next-q-btn');
         const audioBtn = document.getElementById('quiz-audio-btn');
 
-        if(allWords.length < 4) { 
-            qText.innerText = "單字量不足(需至少4個)"; 
-            return; 
-        }
-
+        if(allWords.length < 4) { qText.innerText = "單字量不足(需至少4個)"; return; }
         nextBtn.style.display = "none";
         const isAudio = document.getElementById('audio-quiz-check').checked;
         const isHide = document.getElementById('quiz-hide-kanji-check').checked;
         
-        // 隨機選題
         quizTarget = allWords[Math.floor(Math.random() * allWords.length)];
 
         if(isAudio) {
-            audioBtn.style.display = "block";
-            qText.innerText = "聽音辨義";
-            replayQuizAudio();
+            audioBtn.style.display = "block"; qText.innerText = "聽音辨義"; replayQuizAudio();
         } else {
-            audioBtn.style.display = "none";
-            qText.innerText = (quizTarget.kanji && !isHide) ? quizTarget.kanji : quizTarget.kana;
+            audioBtn.style.display = "none"; qText.innerText = (quizTarget.kanji && !isHide) ? quizTarget.kanji : quizTarget.kana;
         }
 
-        // 生成選項
         let options = [quizTarget.chinese];
         while(options.length < 4) {
             let rand = allWords[Math.floor(Math.random() * allWords.length)];
@@ -328,19 +367,20 @@
         qOptions.innerHTML = "";
         options.forEach(opt => {
             const btn = document.createElement('button');
-            btn.className = "option-btn";
-            btn.innerText = opt;
+            btn.className = "option-btn"; btn.innerText = opt;
             btn.onclick = () => {
                 const btns = qOptions.querySelectorAll('.option-btn');
-                btns.forEach(b => b.onclick = null); // 停用點擊
+                btns.forEach(b => b.onclick = null); 
                 
                 if(opt === quizTarget.chinese) {
                     btn.classList.add('correct');
                 } else {
                     btn.classList.add('wrong');
-                    // 答錯自動標記為不熟
                     errorStats[quizTarget.kana] = (errorStats[quizTarget.kana] || 0) + 1;
-                    if(srsData[quizTarget.kana]) srsData[quizTarget.kana].interval = 0;
+                    if(srsData[quizTarget.kana]) {
+                        // 測驗答錯中文，代表中文意思不熟
+                        srsData[quizTarget.kana].zh_interval = 0; 
+                    }
                     saveAll();
                     btns.forEach(b => { if(b.innerText === quizTarget.chinese) b.classList.add('correct'); });
                 }
@@ -387,7 +427,10 @@
             let res = e.results[0][0].transcript.replace(/[。？！\s\.,\?!]/g, "");
             const item = currentPool[idx];
             if(res === item.kana || res === item.kanji || res.includes(item.kana)) {
-                bar.innerText = "✅ 正確！"; handleSRSMark(true);
+                bar.innerText = "✅ 發音正確！(日文熟練度UP)"; 
+                if(!srsData[item.kana]) srsData[item.kana] = { jp_interval:0, jp_ease:2.5, jp_next:Date.now(), zh_interval:0, zh_ease:2.5, zh_next:Date.now() };
+                updateSRSNode(srsData[item.kana], 'jp', true, Date.now()); // 語音辨識成功只增加日文熟練度
+                saveAll(); updateCard();
             } else { bar.innerText = "❌ 聽到的是: " + res; }
         };
         rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2500); };
@@ -403,14 +446,8 @@
         } catch(e) { alert("格式錯誤"); }
     }
 
-    function exportBackup() {
-        document.getElementById('import-area').value = JSON.stringify(allWords, null, 2);
-        alert("已導出至文字框");
-    }
-
-    function clearAllData() {
-        if(confirm("確定清空所有資料嗎？")) { localStorage.clear(); location.reload(); }
-    }
+    function exportBackup() { document.getElementById('import-area').value = JSON.stringify(allWords, null, 2); alert("已導出至文字框"); }
+    function clearAllData() { if(confirm("確定清空所有資料嗎？")) { localStorage.clear(); location.reload(); } }
 
     function renderWordList() {
         const box = document.getElementById('full-list');
@@ -419,21 +456,20 @@
         allWords.filter(w => w.kana.includes(query) || w.chinese.includes(query) || (w.kanji && w.kanji.includes(query))).forEach(w => {
             const item = document.createElement('div');
             item.className = "word-item";
+            
+            let jpStatus = srsData[w.kana]?.jp_interval > 0 ? '<span style="color:var(--success)">日✅</span>' : '<span style="color:#aaa">日未</span>';
+            let zhStatus = srsData[w.kana]?.zh_interval > 0 ? '<span style="color:var(--success)">中✅</span>' : '<span style="color:#aaa">中未</span>';
+            
             item.innerHTML = `<div><b>${w.kanji || w.kana}</b>${errorStats[w.kana]?`<span style="color:red"> (🔥${errorStats[w.kana]})</span>`:""}<br><small>${w.chinese}</small></div>
-                              <button class="btn-gray" onclick="toggleWordStat('${w.kana}')" style="padding:5px 10px; font-size:12px;">${srsData[w.kana]?.interval > 0 ? '已會':'未會'}</button>`;
+                              <div style="font-size:13px; font-weight:bold;">${jpStatus} | ${zhStatus}</div>`;
             box.appendChild(item);
         });
     }
 
-    function toggleWordStat(k) { 
-        if(!srsData[k]) srsData[k] = {interval:0, ease:2.5, nextReview:Date.now()};
-        srsData[k].interval = srsData[k].interval > 0 ? 0 : 1; 
-        saveAll(); renderWordList(); 
-    }
-
     function renderStats() {
         const total = allWords.length;
-        const mastered = Object.values(srsData).filter(d => d.interval >= 1).length;
+        // 必須日文和中文的 interval 都 >= 1 才算完全掌握
+        const mastered = Object.values(srsData).filter(d => d.jp_interval >= 1 && d.zh_interval >= 1).length;
         document.getElementById('stat-percent').innerText = Math.round((mastered / total) * 100) + "%";
         document.getElementById('stat-count').innerText = `${mastered} / ${total}`;
         const weakOnes = Object.entries(errorStats).sort((a,b) => b[1] - a[1]).slice(0, 10);
@@ -449,7 +485,7 @@
     }
 
     function updateProgressBar() {
-        const mastered = Object.values(srsData).filter(d => d.interval >= 1).length;
+        const mastered = Object.values(srsData).filter(d => d.jp_interval >= 1 && d.zh_interval >= 1).length;
         document.getElementById('main-progress').style.width = ((mastered / allWords.length) * 100) + "%";
     }
 
