@@ -71,8 +71,8 @@
         .btn-blue { background: #4a90e2; color: white; }
         .btn-green { background: #2ecc71; color: white; }
         .btn-red { background: #e74c3c; color: white; }
-        .btn-orange { background: #e67e22; color: white; } /* 中文未會專用橘色 */
-        .btn-yellow { background: #f39c12; color: white; } /* 複習錯題 */
+        .btn-orange { background: #e67e22; color: white; }
+        .btn-yellow { background: #f39c12; color: white; }
         .btn-purple { background: var(--purple); color: white; }
         .btn-gray { background: #e0e0e0; color: #666; }
         button:active { transform: scale(0.96); }
@@ -126,9 +126,11 @@
             <button class="btn-purple" onclick="applyFilter('srs')" id="srs-btn">⏳ 遺忘曲線</button>
         </div>
 
+        <!-- 語音發音區 (已補回聽例句功能) -->
         <div class="grid-2" style="margin-top: 5px;">
             <button class="btn-blue" onclick="speak('word')">🔊 讀單字</button>
-            <button class="btn-gray" style="background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
+            <button class="btn-blue" onclick="speak('ex')">💬 聽例句</button>
+            <button class="btn-gray" style="grid-column: span 2; background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
         </div>
         
         <!-- 記憶雙軌標記區 -->
@@ -193,7 +195,6 @@
     let srsData = JSON.parse(localStorage.getItem('jp_srs_data')) || {};
     let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
 
-    // 資料庫自動升級 (將舊的單一 interval 轉換為 jp/zh 雙軌制)
     for (let key in srsData) {
         let d = srsData[key];
         if (d && d.interval !== undefined) {
@@ -206,7 +207,7 @@
 
     let currentPool = [...allWords];
     let idx = 0;
-    let activeFilter = 'none'; // 'srs', 'jp', 'zh', 'none'
+    let activeFilter = 'none';
     let quizTarget = null;
 
     function saveAll() {
@@ -249,31 +250,30 @@
             updateSRSNode(data, 'zh', true, now);
         } else if (type === 'jp') {
             updateSRSNode(data, 'jp', false, now);
-            updateSRSNode(data, 'zh', true, now); // 假設忘記日文代表還記得中文
+            updateSRSNode(data, 'zh', true, now);
             errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
         } else if (type === 'zh') {
-            updateSRSNode(data, 'jp', true, now); // 假設忘記中文代表還記得日文
+            updateSRSNode(data, 'jp', true, now);
             updateSRSNode(data, 'zh', false, now);
             errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
         }
         
         saveAll(); updateCard();
-        if(type === 'both') setTimeout(() => moveCard(1), 400); // 只有全對才自動跳下一張
+        if(type === 'both') setTimeout(() => moveCard(1), 400); 
     }
 
     // --- 過濾器機制 ---
     function applyFilter(filterType) {
-        if (activeFilter === filterType) activeFilter = 'none'; // 取消過濾
+        if (activeFilter === filterType) activeFilter = 'none';
         else activeFilter = filterType;
 
-        // UI 樣式重置
         document.getElementById('srs-btn').className = 'btn-purple';
         document.getElementById('filter-jp-btn').className = 'btn-gray';
         document.getElementById('filter-zh-btn').className = 'btn-gray';
 
         const now = Date.now();
         if (activeFilter === 'srs') {
-            document.getElementById('srs-btn').classList.add('btn-blue'); // 點亮
+            document.getElementById('srs-btn').classList.add('btn-blue');
             currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].jp_next <= now || srsData[w.kana].zh_next <= now);
             currentPool.sort((a,b) => Math.min(srsData[a.kana]?.jp_next||0, srsData[a.kana]?.zh_next||0) - Math.min(srsData[b.kana]?.jp_next||0, srsData[b.kana]?.zh_next||0));
         } else if (activeFilter === 'jp') {
@@ -283,7 +283,7 @@
             document.getElementById('filter-zh-btn').className = 'btn-blue';
             currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].zh_interval === 0);
         } else {
-            currentPool = [...allWords]; // 全顯示
+            currentPool = [...allWords];
         }
         
         idx = 0; updateCard();
@@ -337,7 +337,7 @@
 
     function moveCard(d) { if(currentPool.length > 0) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); } }
 
-    // --- 測驗模式 (答錯自動扣除日文/中文評分) ---
+    // --- 測驗模式 ---
     function loadQuiz() {
         const qText = document.getElementById('quiz-text');
         const qOptions = document.getElementById('quiz-options');
@@ -378,7 +378,6 @@
                     btn.classList.add('wrong');
                     errorStats[quizTarget.kana] = (errorStats[quizTarget.kana] || 0) + 1;
                     if(srsData[quizTarget.kana]) {
-                        // 測驗答錯中文，代表中文意思不熟
                         srsData[quizTarget.kana].zh_interval = 0; 
                     }
                     saveAll();
@@ -429,7 +428,7 @@
             if(res === item.kana || res === item.kanji || res.includes(item.kana)) {
                 bar.innerText = "✅ 發音正確！(日文熟練度UP)"; 
                 if(!srsData[item.kana]) srsData[item.kana] = { jp_interval:0, jp_ease:2.5, jp_next:Date.now(), zh_interval:0, zh_ease:2.5, zh_next:Date.now() };
-                updateSRSNode(srsData[item.kana], 'jp', true, Date.now()); // 語音辨識成功只增加日文熟練度
+                updateSRSNode(srsData[item.kana], 'jp', true, Date.now());
                 saveAll(); updateCard();
             } else { bar.innerText = "❌ 聽到的是: " + res; }
         };
@@ -468,7 +467,6 @@
 
     function renderStats() {
         const total = allWords.length;
-        // 必須日文和中文的 interval 都 >= 1 才算完全掌握
         const mastered = Object.values(srsData).filter(d => d.jp_interval >= 1 && d.zh_interval >= 1).length;
         document.getElementById('stat-percent').innerText = Math.round((mastered / total) * 100) + "%";
         document.getElementById('stat-count').innerText = `${mastered} / ${total}`;
