@@ -129,16 +129,16 @@
             <button class="btn-gray" style="grid-column: span 2; background:#fff3e0; color:#f39c12;" onclick="startRecog()">🎤 發音檢測</button>
         </div>
         
+        <!-- 全新 Anki 評分按鈕 -->
+        <div class="grid-2" style="margin-top: 10px;">
+            <button class="btn-orange" onclick="handleSRSMark('only_zh')">📝 記住中文</button>
+            <button class="btn-blue" onclick="handleSRSMark('only_jp')">🗣️ 記住日文</button>
+        </div>
         <div class="grid-2">
-            <button class="btn-red" onclick="handleSRSMark('jp')">❌ 忘記日文</button>
-            <button class="btn-orange" onclick="handleSRSMark('zh')">❌ 忘記中文</button>
+            <button class="btn-red" onclick="handleSRSMark('none')">❌ 都忘記了</button>
+            <button class="btn-green" onclick="handleSRSMark('both')">✅ 都記住了</button>
         </div>
-        <button class="btn-green" onclick="handleSRSMark('both')" style="width:100%; margin-bottom:10px;">✅ 都記住了</button>
 
-        <div style="display:flex; gap:10px; width:100%;">
-            <button class="btn-gray" style="flex:1" onclick="moveCard(-1)">上一個</button>
-            <button class="btn-gray" style="flex:1" onclick="moveCard(1)">下一個</button>
-        </div>
         <div id="card-counter" style="margin-top:15px; color:#999; font-size:14px;"></div>
     </section>
 
@@ -158,11 +158,8 @@
 
     <!-- 資料管理與清單 -->
     <section id="list-view" class="view-section">
-        
-        <!-- 雲端同步區塊 (全新功能) -->
         <div class="mgmt-card" style="background:#f0f8ff; border: 2px solid #4a90e2;">
             <h3 style="margin-top:0; color:#2c3e50; font-size: 16px;">☁️ 雲端跨裝置同步</h3>
-            <p style="font-size:12px; color:#666; margin-top:0;">將進度儲存至 JSONBin 實現無縫同步</p>
             <input type="text" id="cloud-api-key" class="cloud-input" placeholder="貼上 X-Master-Key (API Key)">
             <input type="text" id="cloud-bin-id" class="cloud-input" placeholder="貼上 Bin ID">
             <div class="grid-2" style="margin-top:10px;">
@@ -205,19 +202,8 @@
     let srsData = JSON.parse(localStorage.getItem('jp_srs_data')) || {};
     let errorStats = JSON.parse(localStorage.getItem('jp_error_stats')) || {};
 
-    // 載入預存的雲端金鑰
     document.getElementById('cloud-api-key').value = localStorage.getItem('jp_cloud_key') || "";
     document.getElementById('cloud-bin-id').value = localStorage.getItem('jp_cloud_bin') || "";
-
-    for (let key in srsData) {
-        let d = srsData[key];
-        if (d && d.interval !== undefined) {
-            d.jp_interval = d.interval; d.jp_ease = d.ease; d.jp_next = d.nextReview;
-            d.zh_interval = d.interval; d.zh_ease = d.ease; d.zh_next = d.nextReview;
-            delete d.interval; delete d.ease; delete d.nextReview;
-        }
-    }
-    localStorage.setItem('jp_srs_data', JSON.stringify(srsData));
 
     let currentPool = [...allWords];
     let idx = 0;
@@ -231,96 +217,93 @@
         updateProgressBar();
     }
 
-    // --- 雲端同步邏輯 (全新) ---
-    async function uploadToCloud() {
-        const apiKey = document.getElementById('cloud-api-key').value.trim();
-        const binId = document.getElementById('cloud-bin-id').value.trim();
-        if(!apiKey || !binId) return alert("請先填寫 API Key 與 Bin ID！");
-        
-        // 記住金鑰
-        localStorage.setItem('jp_cloud_key', apiKey);
-        localStorage.setItem('jp_cloud_bin', binId);
-
-        const payload = { allWords, srsData, errorStats };
-        const btn = document.getElementById('upload-btn');
-        btn.innerText = "⏳ 上傳中...";
-
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
-                body: JSON.stringify(payload)
-            });
-            if(res.ok) alert("✅ 成功！你的進度與單字已備份到雲端。");
-            else alert("❌ 上傳失敗，請檢查金鑰或 ID 是否正確。");
-        } catch(e) { alert("❌ 網路連線錯誤"); }
-        btn.innerText = "⬆️ 上傳";
-    }
-
-    async function downloadFromCloud() {
-        const apiKey = document.getElementById('cloud-api-key').value.trim();
-        const binId = document.getElementById('cloud-bin-id').value.trim();
-        if(!apiKey || !binId) return alert("請先填寫 API Key 與 Bin ID！");
-        
-        if(!confirm("下載雲端資料會覆蓋這台裝置目前的進度，確定要下載嗎？")) return;
-
-        localStorage.setItem('jp_cloud_key', apiKey);
-        localStorage.setItem('jp_cloud_bin', binId);
-
-        const btn = document.getElementById('download-btn');
-        btn.innerText = "⏳ 下載中...";
-
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                method: 'GET',
-                headers: { 'X-Master-Key': apiKey }
-            });
-            if(res.ok) {
-                const result = await res.json();
-                const data = result.record;
-                if(data.allWords) {
-                    allWords = data.allWords;
-                    srsData = data.srsData || {};
-                    errorStats = data.errorStats || {};
-                    saveAll();
-                    alert("✅ 成功！資料已從雲端同步到這台裝置。");
-                    location.reload();
-                } else alert("❌ 雲端資料格式錯誤。");
-            } else alert("❌ 下載失敗，請檢查金鑰或 ID 是否正確。");
-        } catch(e) { alert("❌ 網路連線錯誤"); }
-        btn.innerText = "⬇️ 下載";
-    }
-
-    // --- 雙軌 SRS 遺忘曲線演算法 ---
+    // --- Anki SM-2 演算法升級版 ---
     function updateSRSNode(data, lang, isCorrect, now) {
         let interval = data[`${lang}_interval`];
         let ease = data[`${lang}_ease`];
+        
         if (isCorrect) {
+            // Anki 預設梯度：1天 -> 3天 -> 間隔 x 難易度
             if (interval === 0) interval = 1;
             else if (interval === 1) interval = 3;
             else interval = Math.round(interval * ease);
-            ease = Math.max(1.3, ease + 0.1);
+            // 答對不改變難易度 (保持 Anki 'Good' 按鈕邏輯)
         } else {
-            interval = 0; ease = Math.max(1.3, ease - 0.2);
+            interval = 0; 
+            ease = Math.max(1.3, ease - 0.2); // 答錯扣除 20% Ease
         }
-        data[`${lang}_interval`] = interval; data[`${lang}_ease`] = ease; data[`${lang}_next`] = now + (interval * 24 * 60 * 60 * 1000);
+        
+        data[`${lang}_interval`] = interval; 
+        data[`${lang}_ease`] = ease; 
+        data[`${lang}_next`] = now + (interval * 24 * 60 * 60 * 1000);
     }
 
     function handleSRSMark(type) {
         if(currentPool.length === 0) return;
         const item = currentPool[idx];
         const now = Date.now();
-        if (!srsData[item.kana]) srsData[item.kana] = { jp_interval:0, jp_ease:2.5, jp_next:now, zh_interval:0, zh_ease:2.5, zh_next:now };
+        
+        if (!srsData[item.kana]) {
+            srsData[item.kana] = { jp_interval:0, jp_ease:2.5, jp_next:now, zh_interval:0, zh_ease:2.5, zh_next:now };
+        }
         let data = srsData[item.kana];
 
-        if (type === 'both') { updateSRSNode(data, 'jp', true, now); updateSRSNode(data, 'zh', true, now); }
-        else if (type === 'jp') { updateSRSNode(data, 'jp', false, now); updateSRSNode(data, 'zh', true, now); errorStats[item.kana] = (errorStats[item.kana] || 0) + 1; }
-        else if (type === 'zh') { updateSRSNode(data, 'jp', true, now); updateSRSNode(data, 'zh', false, now); errorStats[item.kana] = (errorStats[item.kana] || 0) + 1; }
+        // 依據 4 種按鈕分配中/日文的對錯
+        if (type === 'both') {
+            updateSRSNode(data, 'jp', true, now);
+            updateSRSNode(data, 'zh', true, now);
+        } else if (type === 'only_jp') {
+            updateSRSNode(data, 'jp', true, now);
+            updateSRSNode(data, 'zh', false, now); // 記住日文 = 忘記中文
+            errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
+        } else if (type === 'only_zh') {
+            updateSRSNode(data, 'jp', false, now); // 記住中文 = 忘記日文
+            updateSRSNode(data, 'zh', true, now);
+            errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
+        } else if (type === 'none') {
+            updateSRSNode(data, 'jp', false, now);
+            updateSRSNode(data, 'zh', false, now);
+            errorStats[item.kana] = (errorStats[item.kana] || 0) + 1;
+        }
         
-        saveAll(); updateCard();
-        if(type === 'both') setTimeout(() => moveCard(1), 400); 
+        saveAll(); 
+        updateCard();
+        // 任一選項皆會自動跳轉至下一張 (符合 Anki 習慣)
+        setTimeout(() => moveCard(1), 250); 
     }
 
+    // --- 雲端同步邏輯 ---
+    async function uploadToCloud() {
+        const apiKey = document.getElementById('cloud-api-key').value.trim();
+        const binId = document.getElementById('cloud-bin-id').value.trim();
+        if(!apiKey || !binId) return alert("請先填寫 API Key 與 Bin ID！");
+        localStorage.setItem('jp_cloud_key', apiKey); localStorage.setItem('jp_cloud_bin', binId);
+        const btn = document.getElementById('upload-btn'); btn.innerText = "⏳ 上傳中...";
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey }, body: JSON.stringify({ allWords, srsData, errorStats }) });
+            if(res.ok) alert("✅ 成功備份到雲端。"); else alert("❌ 上傳失敗。");
+        } catch(e) { alert("❌ 網路連線錯誤"); }
+        btn.innerText = "⬆️ 上傳";
+    }
+
+    async function downloadFromCloud() {
+        const apiKey = document.getElementById('cloud-api-key').value.trim(); const binId = document.getElementById('cloud-bin-id').value.trim();
+        if(!apiKey || !binId) return alert("請先填寫！");
+        if(!confirm("確定要下載並覆蓋目前裝置的進度嗎？")) return;
+        localStorage.setItem('jp_cloud_key', apiKey); localStorage.setItem('jp_cloud_bin', binId);
+        const btn = document.getElementById('download-btn'); btn.innerText = "⏳ 下載中...";
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { method: 'GET', headers: { 'X-Master-Key': apiKey } });
+            if(res.ok) {
+                const data = (await res.json()).record;
+                if(data.allWords) { allWords = data.allWords; srsData = data.srsData || {}; errorStats = data.errorStats || {}; saveAll(); location.reload(); } 
+                else alert("❌ 資料格式錯誤。");
+            } else alert("❌ 下載失敗。");
+        } catch(e) { alert("❌ 網路連線錯誤"); }
+        btn.innerText = "⬇️ 下載";
+    }
+
+    // --- 過濾器機制 ---
     function applyFilter(filterType) {
         if (activeFilter === filterType) activeFilter = 'none';
         else activeFilter = filterType;
@@ -340,12 +323,15 @@
         } else if (activeFilter === 'zh') {
             document.getElementById('filter-zh-btn').className = 'btn-blue';
             currentPool = allWords.filter(w => !srsData[w.kana] || srsData[w.kana].zh_interval === 0);
-        } else currentPool = [...allWords];
+        } else {
+            currentPool = [...allWords];
+        }
         idx = 0; updateCard();
     }
 
     function shuffleWords() { if(currentPool.length > 0) { currentPool.sort(() => Math.random() - 0.5); idx = 0; updateCard(); } }
 
+    // --- 學習卡片 UI ---
     function updateCard() {
         const frontBox = document.getElementById('display-front');
         const backBox = document.getElementById('display-back-main');
@@ -353,7 +339,7 @@
         const hideKanji = document.getElementById('study-hide-kanji').checked;
         const srsBadge = document.getElementById('srs-badge');
         
-        if(currentPool.length === 0) { frontBox.innerHTML = "無符合單字"; srsBadge.innerText = ""; return; }
+        if(currentPool.length === 0) { frontBox.innerHTML = "無符合條件的單字"; srsBadge.innerText = ""; return; }
         
         const item = currentPool[idx];
         const jpContent = (hideKanji || !item.kanji) ? item.kana : `<ruby>${item.kanji}<rt>${item.kana}</rt></ruby>`;
@@ -373,6 +359,7 @@
         const parts = item.example.split('(');
         document.getElementById('ex-jp-display').innerText = parts[0].trim();
         document.getElementById('ex-zh-display').innerText = parts[1] ? parts[1].replace(')', '') : '';
+        
         document.getElementById('flashcard').classList.remove('flipped');
         document.getElementById('card-counter').innerText = `${idx + 1} / ${currentPool.length}`;
         updateProgressBar();
@@ -380,10 +367,11 @@
 
     function moveCard(d) { if(currentPool.length > 0) { idx = (idx + d + currentPool.length) % currentPool.length; updateCard(); } }
 
+    // --- 測驗與發音功能 ---
     function loadQuiz() {
         const qText = document.getElementById('quiz-text'); const qOptions = document.getElementById('quiz-options');
         const nextBtn = document.getElementById('next-q-btn'); const audioBtn = document.getElementById('quiz-audio-btn');
-        if(allWords.length < 4) { qText.innerText = "單字不足"; return; }
+        if(allWords.length < 4) { qText.innerText = "單字量不足(需至少4個)"; return; }
         nextBtn.style.display = "none";
         const isAudio = document.getElementById('audio-quiz-check').checked;
         const isHide = document.getElementById('quiz-hide-kanji-check').checked;
@@ -425,12 +413,13 @@
 
     function startRecog() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(!SpeechRecognition) return alert("不支援"); const rec = new SpeechRecognition(); rec.lang = 'ja-JP';
-        const bar = document.getElementById('voice-info'); rec.onstart = () => { bar.className = "listening"; bar.innerText = "🎤 正在聆聽日文..."; };
+        if(!SpeechRecognition) return alert("不支援語音辨識");
+        const rec = new SpeechRecognition(); rec.lang = 'ja-JP'; const bar = document.getElementById('voice-info');
+        rec.onstart = () => { bar.className = "listening"; bar.innerText = "🎤 正在聆聽日文..."; };
         rec.onresult = (e) => {
             let res = e.results[0][0].transcript.replace(/[。？！\s\.,\?!]/g, ""); const item = currentPool[idx];
             if(res === item.kana || res === item.kanji || res.includes(item.kana)) {
-                bar.innerText = "✅ 正確！(日文熟練度UP)"; 
+                bar.innerText = "✅ 發音正確！(日文熟練度UP)"; 
                 if(!srsData[item.kana]) srsData[item.kana] = { jp_interval:0, jp_ease:2.5, jp_next:Date.now(), zh_interval:0, zh_ease:2.5, zh_next:Date.now() };
                 updateSRSNode(srsData[item.kana], 'jp', true, Date.now()); saveAll(); updateCard();
             } else bar.innerText = "❌ 聽到的是: " + res;
@@ -438,6 +427,7 @@
         rec.onend = () => { setTimeout(() => { bar.className = ""; }, 2500); }; rec.start();
     }
 
+    // --- 數據清單與統計 ---
     function importJSON() { try { const newData = JSON.parse(document.getElementById('import-area').value); const existing = new Set(allWords.map(w => w.kana)); newData.forEach(i => { if(!existing.has(i.kana)) allWords.push(i); }); saveAll(); location.reload(); } catch(e) { alert("格式錯誤"); } }
     function exportBackup() { document.getElementById('import-area').value = JSON.stringify(allWords, null, 2); alert("已導出至文字框"); }
     function clearAllData() { if(confirm("確定清空所有資料嗎？")) { localStorage.clear(); location.reload(); } }
